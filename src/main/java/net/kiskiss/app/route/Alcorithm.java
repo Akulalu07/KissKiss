@@ -129,19 +129,16 @@ public class Alcorithm {
         String url = "https://routing.api.2gis.com/routing/7.0.0/global?key=e50d3992-8076-47d8-bc3c-9add5a142f20";
 
         String requestBody = String.format("""
-                {
-                  "points": [
-                    {"type": "stop", "lon": %f, "lat": %f},
-                    {"type": "stop", "lon": %f, "lat": %f}
-                  ],
-                  "locale": "ru",
-                  "transport": "walking",
-                  "route_mode": "fastest",
-                  "traffic_mode": "jam"
-                }
+                    {
+                      "points": [
+                        {"type": "stop", "lon": %f, "lat": %f},
+                        {"type": "stop", "lon": %f, "lat": %f}
+                      ],
+                      "transport": "walking"
+                    }
                 """,
-                startPoint.getX(), startPoint.getY(),
-                endPoint.getX(), endPoint.getY()
+                startPoint.getY(), startPoint.getX(),
+                endPoint.getY(), endPoint.getX()
         );
 
         HttpHeaders headers = new HttpHeaders();
