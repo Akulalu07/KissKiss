@@ -71,7 +71,7 @@ public class Alcorithm {
 
                 JsonNode items = root.path("result").path("items");
                 if (items.isArray() && !items.isEmpty()) {
-                    return items.get(new Random().nextInt(1, 5)).path("name").asText();
+                    return items.get(0).path("name").asText();
                 } else {
                     return null;
                 }
@@ -83,6 +83,10 @@ public class Alcorithm {
 
         return null;
     }
+
+//    public static void main(String[] args) {
+//        findLocationByType(PriorityType.GREEN_VALLEY, new  Point(55.755800,37.617300)).var;
+//    }
 
     private Point getPointFromName(String name, String city) {
         if (name == null || name.isBlank()) return new Point(-1, -1);
