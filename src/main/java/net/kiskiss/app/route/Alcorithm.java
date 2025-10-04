@@ -108,8 +108,8 @@ public class Alcorithm {
 
                 JsonNode items = root.path("result").path("items").path("point");
                 if (items.isArray() && !items.isEmpty()) {
-                    int lat = items.get(0).path("lat").asInt();
-                    int lon = items.get(0).path("lon").asInt();
+                    double lat = items.get(0).path("lat").asDouble();
+                    double lon = items.get(0).path("lon").asDouble();
                     return new Point(lat, lon);
                 } else {
                     return new Point(-1, -1);
@@ -128,18 +128,18 @@ public class Alcorithm {
 
         String url = "https://routing.api.2gis.com/routing/7.0.0/global?key=e50d3992-8076-47d8-bc3c-9add5a142f20";
 
-        // Создаем JSON тело запроса
-        String requestBody = String.format(
-                "{" +
-                        "\"points\":[" +
-                        "{\"type\":\"stop\",\"lon\":%f,\"lat\":%f}," +
-                        "{\"type\":\"stop\",\"lon\":%f,\"lat\":%f}" +
-                        "]," +
-                        "\"locale\":\"ru\"," +
-                        "\"transport\":\"walking\"," +
-                        "\"route_mode\":\"fastest\"," +
-                        "\"traffic_mode\":\"jam\"" +
-                        "}",
+        String requestBody = String.format("""
+                {
+                  "points": [
+                    {"type": "stop", "lon": %f, "lat": %f},
+                    {"type": "stop", "lon": %f, "lat": %f}
+                  ],
+                  "locale": "ru",
+                  "transport": "walking",
+                  "route_mode": "fastest",
+                  "traffic_mode": "jam"
+                }
+                """,
                 startPoint.getX(), startPoint.getY(),
                 endPoint.getX(), endPoint.getY()
         );
@@ -158,18 +158,27 @@ public class Alcorithm {
                     String.class
             );
 
-            if (response.getStatusCode().is2xxSuccessful()) {
-                String responseBody = response.getBody();
+            String responseBody = response.getBody();
+            if (responseBody == null || responseBody.isBlank()) {
+                System.err.println("Routing API вернул пустой ответ. " +
+                        "start=" + startPoint + " end=" + endPoint);
+                return -1;
+            }
 
+            if (response.getStatusCode().is2xxSuccessful()) {
                 ObjectMapper objectMapper = new ObjectMapper();
                 JsonNode root = objectMapper.readTree(responseBody);
 
                 if ("OK".equals(root.path("status").asText())) {
                     JsonNode result = root.path("result");
-                    if (result.isArray() && !result.isEmpty())
+                    if (result.isArray() && !result.isEmpty()) {
                         return result.get(0).path("total_distance").asInt() / speed;
-
+                    }
+                } else {
+                    System.err.println("Routing API error: " + responseBody);
                 }
+            } else {
+                System.err.println("Routing API HTTP " + response.getStatusCode());
             }
 
         } catch (Exception e) {
@@ -178,5 +187,6 @@ public class Alcorithm {
 
         return -1;
     }
+
 
 }
