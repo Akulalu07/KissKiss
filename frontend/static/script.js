@@ -321,8 +321,8 @@ function sendRouteDataToServer() {
     
     const serverData = {
         point: {
-            x: routeData.coordinates.lng,
-            y: routeData.coordinates.lat
+            x: routeData.coordinates.lat,
+            y: routeData.coordinates.lng
         },
         priority: {
             FOOD: routeData.priorities.food.value,
