@@ -803,6 +803,7 @@ function buildRoute() {
 
 // Функция отправки данных маршрута на сервер
 // Функция отправки данных маршрута на сервер
+// Функция отправки данных маршрута на сервер
 function sendRouteDataToServer() {
     updateStatus('📡 Отправляем данные на сервер...', 'loading');
     
@@ -819,14 +820,16 @@ function sendRouteDataToServer() {
             PEDESTRIAN: routeData.priorities.walking.value,
             MODERN_ARCHITECTURE: routeData.priorities.infrastructure.value,
             ATTRACTIONS: routeData.priorities.culture.value,
-            GREEN_VALLEY: routeData.priorities.green.value,
-            SPEED: speedValue // Отправляем скорость в км/ч
+            GREEN_VALLEY: routeData.priorities.green.value
         },
+        city: routeData.city, // Добавляем город отдельно после приоритетов
+        speed: speedValue, // Скорость выносим отдельно вне приоритетов
         minutes: routeData.time.hours * 60 + routeData.time.minutes,
         loop: routeData.loop
     };
     
     console.log('📤 Отправляем данные:', serverData);
+    console.log('🏙️ Город:', routeData.city);
     console.log('🚶 Скорость преобразована:', routeData.priorities.speed.value, '→', speedValue, 'км/ч');
     
     // Пробуем разные подходы
