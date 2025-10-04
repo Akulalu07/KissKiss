@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Хакатон</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-brand">Генерация маршрута для прогулки</div>
+            <!-- <ul class="nav-menu">
+                <li><a href="#about">че-то</a></li>
+                <li><a href="#map">карта</a></li>
+                <li><a href="#contact">кто</a></li>
+            </ul> -->
+        </nav>
+    </header>
+
+    <main class="main">
+        <!-- Герой секция -->
+        <section class="hero">
+            <div class="container">
+                <h1 class="hero-title">Маршруты</h1>
+                <p class="hero-subtitle">Благодаря данной функции вы сможете построить маршрут согласно вашим предпочтениям</p>
+                <div class="hero-buttons">
+                    <!-- <button class="btn btn-primary">Круто!</button> -->
+                    <button class="btn btn-secondary">Перейти к созданию маршрута</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Секция о сервисе -->
+        <section id="about" class="section">
+            <div class="container">
+                <h2>Тут че-то куда-то</h2>
+                <div class="features">
+                    <!-- Карточка 1: Координаты -->
+                    <div class="feature-card">
+                        <h3>Начало маршрута</h3>
+                        <p>Укажи координаты начала маршрута:</p>
+                        <div class="coordinates-input">
+                            <div class="input-group">
+                                <label for="latitude">Широта:</label>
+                                <input type="text" id="latitude" placeholder="55.7558" value="55.7558">
+                            </div>
+                            <div class="input-group">
+                                <label for="longitude">Долгота:</label>
+                                <input type="text" id="longitude" placeholder="37.6173" value="37.6173">
+                            </div>
+                            <button id="set-coordinates-btn" class="btn btn-small">Установить на карте</button>
+                        </div>
+                    </div>
+
+                    <!-- Карточка 2: Приоритеты с ползунками -->
+                    <div class="feature-card">
+                        <h3>Параметры построения маршрута</h3>
+                        <p>Установи приоритеты от 0 до 10:</p>
+                        <div class="priorities-list">
+                            <div class="priority-item">
+                                <span class="priority-label">Пеший маршрут</span>
+                                <div class="priority-control">
+                                    <input type="range" class="priority-slider" min="0" max="10" value="0" data-priority="walking">
+                                    <span class="priority-value">0</span>
+                                </div>
+                            </div>
+                            <div class="priority-item">
+                                <span class="priority-label">Еда</span>
+                                <div class="priority-control">
+                                    <input type="range" class="priority-slider" min="0" max="10" value="0" data-priority="food">
+                                    <span class="priority-value">0</span>
+                                </div>
+                            </div>
+                            <div class="priority-item">
+                                <span class="priority-label">Зеленая тропа</span>
+                                <div class="priority-control">
+                                    <input type="range" class="priority-slider" min="0" max="10" value="0" data-priority="green">
+                                    <span class="priority-value">0</span>
+                                </div>
+                            </div>
+                            <div class="priority-item">
+                                <span class="priority-label">Памятники, музеи, монументы</span>
+                                <div class="priority-control">
+                                    <input type="range" class="priority-slider" min="0" max="10" value="0" data-priority="culture">
+                                    <span class="priority-value">0</span>
+                                </div>
+                            </div>
+                            <div class="priority-item">
+                                <span class="priority-label">Современная инфраструктура</span>
+                                <div class="priority-control">
+                                    <input type="range" class="priority-slider" min="0" max="10" value="0" data-priority="infrastructure">
+                                    <span class="priority-value">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="priority-help">
+                            <small>💡 0 - не важно, 10 - очень важно</small>
+                        </div>
+                    </div>
+
+                    <!-- Карточка 3: Время -->
+                    <div class="feature-card">
+                        <h3>Время маршрута</h3>
+                        <p>Установи время в пути:</p>
+                        <div class="time-controls">
+                            <div class="time-input-group">
+                                <label for="hours">Часы:</label>
+                                <div class="time-input">
+                                    <button class="time-btn minus" data-type="hours">-</button>
+                                    <input type="number" id="hours" min="0" max="23" value="1">
+                                    <button class="time-btn plus" data-type="hours">+</button>
+                                </div>
+                            </div>
+                            <div class="time-input-group">
+                                <label for="minutes">Минуты:</label>
+                                <div class="time-input">
+                                    <button class="time-btn minus" data-type="minutes">-</button>
+                                    <input type="number" id="minutes" min="0" max="59" value="30">
+                                    <button class="time-btn plus" data-type="minutes">+</button>
+                                </div>
+                            </div>
+                            <div class="time-display">
+                                <strong>Общее время: <span id="total-time">1 час 30 минут</span></strong>
+                            </div>
+                            <button id="apply-time-btn" class="btn btn-small">Применить время</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопка построения маршрута -->
+                <div class="route-actions">
+                    <button id="build-route-btn" class="btn btn-large">🚀 Построить маршрут!</button>
+                    <div id="route-summary" class="route-summary">
+                        <!-- Сюда будет выводиться сводка по маршруту -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Секция с картой -->
+        <section id="map" class="section map-section">
+            <div class="container">
+                <h2>Карта с маршрутом</h2>
+                <!-- <p class="map-description">Карта с маршрутом</p> -->
+                
+                <!-- <div class="key-info">
+                    <strong>API ключ:</strong> f416cc08-f627-4ac9-8709-aa1a86b0a7d4
+                </div>
+                
+                <div id="status" class="status loading">Инициализация карты Москвы...</div> -->
+                
+                <div class="map-controls">
+                    <!-- <button id="add-marker-btn" class="btn btn-primary">Добавить маркер</button> -->
+                    <!-- <button id="find-cafe-btn" class="btn btn-secondary">Найти кафе</button> -->
+                    <button id="moscow-places-btn" class="btn btn-info">Отдалить карту</button>
+                    <button id="reset-map-btn" class="btn btn-warning">Сбросить карту</button>
+                </div>
+                
+                <div id="map-container" class="map-container"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; фронтенд женщина = прав нет</p>
+        </div>
+    </footer>
+
+    <!-- Подключаем API 2GIS -->
+    <script src="https://mapgl.2gis.com/api/js/v1"></script>
+    <script src="script.js"></script>
+</body>
+</html>

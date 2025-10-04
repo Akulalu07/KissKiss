@@ -1,0 +1,23 @@
+services:
+  backend:
+    build: .
+    container_name: kisskis-backend
+    ports:
+      - "8080:8080"
+    networks:
+      - appnet
+
+  frontend:
+    build: ./frontend
+    container_name: kisskis-frontend
+    ports:
+      - "8081:8081"
+    depends_on:
+      - backend
+    environment:
+      BACKEND_URL: http://backend:8080
+    networks:
+      - appnet
+
+networks:
+  appnet:
