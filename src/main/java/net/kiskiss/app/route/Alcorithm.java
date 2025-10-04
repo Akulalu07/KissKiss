@@ -84,45 +84,40 @@ public class Alcorithm {
         return null;
     }
 
-    private Point getPointFromName(String name, String city){
+    private Point getPointFromName(String name, String city) {
+        if (name == null || name.isBlank()) return new Point(-1, -1);
+
         RestTemplate restTemplate = new RestTemplate();
 
         String url = "https://catalog.api.2gis.com/3.0/items";
 
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url)
-                .queryParam("q", city + "," +  name)
+                .queryParam("q", city + " " + name)
                 .queryParam("fields", "items.point")
                 .queryParam("key", "e50d3992-8076-47d8-bc3c-9add5a142f20")
                 .queryParam("X-App-Id", "ru.gishackathon.app03");
 
         try {
-            ResponseEntity<String> response = restTemplate.getForEntity(
-                    builder.toUriString(),
-                    String.class
-            );
-
+            ResponseEntity<String> response = restTemplate.getForEntity(builder.toUriString(), String.class);
             if (response.getStatusCode().is2xxSuccessful()) {
-                String responseBody = response.getBody();
-
                 ObjectMapper objectMapper = new ObjectMapper();
-                JsonNode root = objectMapper.readTree(responseBody);
+                JsonNode root = objectMapper.readTree(response.getBody());
+                JsonNode items = root.path("result").path("items");
 
-                JsonNode items = root.path("result").path("items").path("point");
                 if (items.isArray() && !items.isEmpty()) {
-                    double lat = items.get(0).path("lat").asDouble();
-                    double lon = items.get(0).path("lon").asDouble();
+                    JsonNode point = items.get(0).path("point");
+                    double lat = point.path("lat").asDouble();
+                    double lon = point.path("lon").asDouble();
                     return new Point(lat, lon);
-                } else {
-                    return new Point(-1, -1);
                 }
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return new Point(-1, -1);
     }
+
 
     private int timeBetweenTwoPoints(Point startPoint, Point endPoint, int speed) {
         RestTemplate restTemplate = new RestTemplate();
