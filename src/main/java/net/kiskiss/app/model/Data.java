@@ -8,6 +8,7 @@ import java.util.HashMap;
 
 @Getter
 @AllArgsConstructor
+@lombok.Data
 public class Data {
 
     private final Point point;
