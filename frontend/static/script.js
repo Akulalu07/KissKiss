@@ -348,8 +348,8 @@ function attemptServerRequest(serverData) {
             options: {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(serverData),
-                mode: 'cors'
+                body: JSON.stringify(serverData)
+                // mode: 'cors'
             }
         },
         {
