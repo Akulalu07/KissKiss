@@ -31,6 +31,7 @@ public class Alcorithm {
 
             Point nextDestination = getPointFromName(findLocationByType(priority.get(priorityIndex), route.getPoints().getLast()), data.getCity());
 
+            System.out.println("КООРДИНАТЫ: " + route.getPoints().getLast().getX() + ", " + route.getPoints().getLast().getY());
             time -= timeBetweenTwoPoints(route.getPoints().getLast(), nextDestination, data.getSpeed());
 
             if (time > 0)
