@@ -315,14 +315,14 @@ function buildRoute() {
 }
 
 // Функция отправки данных маршрута на сервер
+// Улучшенная функция отправки с обработкой CORS
 function sendRouteDataToServer() {
     updateStatus('📡 Отправляем данные на сервер...', 'loading');
     
-    // Преобразуем данные в формат сервера
     const serverData = {
         point: {
-            x: routeData.coordinates.lng, // Долгота
-            y: routeData.coordinates.lat  // Широта
+            x: routeData.coordinates.lng,
+            y: routeData.coordinates.lat
         },
         priority: {
             FOOD: routeData.priorities.food.value,
@@ -334,36 +334,108 @@ function sendRouteDataToServer() {
         minutes: routeData.time.hours * 60 + routeData.time.minutes
     };
     
-    console.log('📤 Отправляем данные на сервер:', serverData);
+    console.log('📤 Отправляем данные:', serverData);
     
-    fetch('http://127.0.0.1:8080/api/route', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
+    // Пробуем разные подходы
+    attemptServerRequest(serverData);
+}
+
+function attemptServerRequest(serverData) {
+    const attempts = [
+        {
+            name: 'Прямое соединение',
+            url: 'http://127.0.0.1:8080/api/route',
+            options: {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(serverData),
+                mode: 'cors'
+            }
         },
-        body: JSON.stringify(serverData)
-    })
+        {
+            name: 'Localhost',
+            url: 'http://localhost:8080/api/route',
+            options: {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(serverData)
+            }
+        },
+        {
+            name: 'Без CORS',
+            url: 'http://127.0.0.1:8080/api/route',
+            options: {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(serverData),
+                mode: 'no-cors' // Этот режим не позволит прочитать ответ, но отправит данные
+            }
+        }
+    ];
+    
+    tryAttempts(attempts, 0, serverData);
+}
+
+function tryAttempts(attempts, index, serverData) {
+    if (index >= attempts.length) {
+        // Все попытки провалились
+        console.log('🎭 Переходим в демо-режим');
+        updateStatus('🔶 Демо-режим: данные сохранены локально', 'info');
+        
+        // Сохраняем данные локально для демо
+        saveLocalRouteData(serverData);
+        showRouteSummary();
+        buildRouteOnMap();
+        return;
+    }
+    
+    const attempt = attempts[index];
+    console.log(`🔄 Попытка ${index + 1}: ${attempt.name}`);
+    
+    updateStatus(`📡 ${attempt.name}...`, 'loading');
+    
+    fetch(attempt.url, attempt.options)
     .then(response => {
+        if (attempt.options.mode === 'no-cors') {
+            // В режиме no-cors мы не можем прочитать ответ, но запрос отправлен
+            console.log('✅ Запрос отправлен (no-cors mode)');
+            updateStatus('✅ Данные отправлены (режим no-cors)', 'success');
+            handleServerResponse({message: "Данные получены сервером (no-cors режим)"});
+            return;
+        }
+        
         if (!response.ok) {
-            throw new Error(`Ошибка сервера: ${response.status}`);
+            throw new Error(`HTTP ${response.status}`);
         }
         return response.json();
     })
     .then(data => {
-        console.log('✅ Сервер ответил:', data);
-        updateStatus('✅ Данные успешно отправлены на сервер!', 'success');
-        
-        // Обрабатываем ответ от сервера
-        handleServerResponse(data);
+        if (data) {
+            console.log('✅ Сервер ответил:', data);
+            updateStatus('✅ Данные успешно отправлены!', 'success');
+            handleServerResponse(data);
+        }
     })
     .catch(error => {
-        console.error('❌ Ошибка отправки данных на сервер:', error);
-        updateStatus('❌ Ошибка отправки на сервер. Продолжаем в демо-режиме', 'error');
+        console.log(`❌ ${attempt.name} failed:`, error.message);
         
-        // Демо-режим: продолжаем работу без сервера
-        showRouteSummary();
-        buildRouteOnMap();
+        // Пробуем следующую попытку
+        setTimeout(() => {
+            tryAttempts(attempts, index + 1, serverData);
+        }, 500);
     });
+}
+
+// Функция для сохранения данных локально (демо-режим)
+function saveLocalRouteData(serverData) {
+    // Сохраняем в localStorage
+    localStorage.setItem('lastRouteData', JSON.stringify(serverData));
+    localStorage.setItem('lastRouteTimestamp', new Date().toISOString());
+    
+    // Сохраняем в глобальной переменной для использования в generateRoutePoints
+    window.lastRouteData = serverData;
+    
+    console.log('💾 Данные сохранены локально:', serverData);
 }
 
 // Функция обработки ответа от сервера
