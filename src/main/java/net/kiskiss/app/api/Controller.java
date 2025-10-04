@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class Controller {
 
     @PostMapping("/api/route")
-    public void getPoint(@RequestBody String point){
-        System.out.println(point);
+    public void getPoint(@RequestBody Data point){
+        System.out.println(point.toString());
     }
 
 }

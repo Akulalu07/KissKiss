@@ -1,10 +1,13 @@
 package net.kiskiss.app.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public enum PriorityType {
-    PEDESTRIAN,
-    FOOD,
-    GREEN_VALLEY,
-    ATTRACTIONS,
-    MODERN_ARCHITECTURE
+
+    @JsonProperty("PEDESTRIAN") PEDESTRIAN,
+    @JsonProperty("FOOD") FOOD,
+    @JsonProperty("GREEN_VALLEY") GREEN_VALLEY,
+    @JsonProperty("ATTRACTIONS") ATTRACTIONS,
+    @JsonProperty("MODERN_ARCHITECTURE") MODERN_ARCHITECTURE
 
 }
