@@ -1,3 +1,5 @@
+// script.js - Основной скрипт приложения
+
 // Основные переменные для карты
 let map;
 let markers = [];
@@ -6,15 +8,18 @@ const moscow = [37.6173, 55.7558];
 
 // Данные маршрута
 let routeData = {
+    city: "moscow",
     coordinates: { lat: 55.7558, lng: 37.6173 },
     priorities: {
         "walking": { name: "Пеший маршрут", value: 3 },
         "food": { name: "Еда", value: 2 },
         "green": { name: "Зеленая тропа", value: 1 },
         "culture": { name: "Памятники, музеи, монументы", value: 4 },
-        "infrastructure": { name: "Современная инфраструктура", value: 5 }
+        "infrastructure": { name: "Современная инфраструктура", value: 5 },
+        "speed": { name: "Скорость маршрута", value: 3 }
     },
-    time: { hours: 1, minutes: 30 }
+    time: { hours: 1, minutes: 30 },
+    loop: true
 };
 
 // Функция обновления статуса
@@ -22,9 +27,84 @@ function updateStatus(message, type = 'info') {
     const status = document.getElementById('status');
     if (status) {
         status.textContent = message;
-        status.className = `status status-${type}`;
+        status.className = `status ${type}`;
     }
     console.log(`Статус: ${message}`);
+}
+
+// Функция изменения города
+function changeCity(cityId) {
+    console.log('🔄 Меняем город на:', cityId);
+    
+    const city = citiesData[cityId];
+    if (!city) {
+        console.error('❌ Город не найден:', cityId);
+        return false;
+    }
+    
+    // Обновляем данные маршрута
+    routeData.city = cityId;
+    routeData.coordinates = { 
+        lat: city.coordinates.lat, 
+        lng: city.coordinates.lng 
+    };
+    
+    console.log('📌 Новые координаты:', routeData.coordinates);
+    
+    // Обновляем поля ввода координат в карточке "Начало маршрута"
+    const latInput = document.getElementById('latitude');
+    const lngInput = document.getElementById('longitude');
+    
+    console.log('🔍 Найдены поля ввода:', { latInput: !!latInput, lngInput: !!lngInput });
+    
+    if (latInput && lngInput) {
+        latInput.value = city.coordinates.lat.toFixed(6);
+        lngInput.value = city.coordinates.lng.toFixed(6);
+        console.log('✅ Поля ввода обновлены:', latInput.value, lngInput.value);
+    } else {
+        console.error('❌ Поля ввода координат не найдены!');
+    }
+    
+    // Обновляем отображение координат в карточке выбора города
+    const coordsDisplay = document.getElementById('city-coordinates-display');
+    if (coordsDisplay) {
+        coordsDisplay.textContent = `${city.coordinates.lat.toFixed(4)}, ${city.coordinates.lng.toFixed(4)}`;
+        console.log('✅ Отображение координат обновлено');
+    }
+    
+    // Обновляем карту если она уже инициализирована
+    if (map) {
+        map.setCenter(city.center);
+        map.setZoom(12);
+        
+        // Очищаем старые маркеры и добавляем новый
+        clearMarkers();
+        addMarker(city.center);
+        console.log('✅ Карта обновлена');
+    }
+    
+    updateStatus(`🏙️ Город изменен на: ${city.name}. Координаты установлены в начало маршрута`, 'success');
+    return true;
+}
+
+// Инициализация выбора города
+function initCitySelect() {
+    const citySelect = document.getElementById('city-select');
+    if (!citySelect) {
+        console.error('Элемент выбора города не найден');
+        return;
+    }
+    
+    citySelect.addEventListener('change', function() {
+        const selectedCity = this.value;
+        changeCity(selectedCity);
+    });
+    
+    // Устанавливаем начальное значение и ФОРСИРУЕМ обновление координат
+    citySelect.value = routeData.city;
+    changeCity(routeData.city);
+    
+    console.log('✅ Выбор города инициализирован');
 }
 
 // Инициализация карты
@@ -36,6 +116,8 @@ function initMap() {
             throw new Error('Библиотека карт 2GIS не загрузилась');
         }
 
+        console.log('🔑 Используем API ключ:', API_KEY);
+        
         map = new mapgl.Map('map-container', {
             center: moscow,
             zoom: 13,
@@ -43,34 +125,140 @@ function initMap() {
         });
 
         map.on('load', () => {
-            updateStatus('🎉 Карта 2GIS Москвы успешно загружена!', 'success');
+            console.log('✅ Карта 2GIS загружена');
+            
+            // ДОБАВЛЯЕМ ОБРАБОТЧИК КЛИКА ПО КАРТЕ
+            map.on('click', function(event) {
+                const coordinates = [event.lngLat.lng, event.lngLat.lat];
+                setStartPointFromMap(coordinates);
+            });
+        });
+
+        // Обработчик ошибок карты
+        map.on('error', (error) => {
+            console.error('❌ Ошибка карты 2GIS:', error);
         });
 
     } catch (error) {
+        console.error('💥 Ошибка инициализации:', error);
         updateStatus('💥 Ошибка инициализации: ' + error.message, 'error');
     }
 }
 
-// Функция добавления маркера
+// Улучшенная функция добавления маркера
 function addMarker(coordinates = null) {
-    if (!map) return null;
+    if (!map) {
+        console.error('❌ Карта не инициализирована');
+        return null;
+    }
     
     try {
+        console.log('🔄 Пытаемся добавить маркер 2GIS с координатами:', coordinates);
+        
         const marker = new mapgl.Marker(map, {
             coordinates: coordinates
         });
         
         markers.push(marker);
+        console.log('✅ Маркер 2GIS успешно добавлен');
         return marker;
     } catch (error) {
-        console.error('Ошибка добавления маркера:', error);
+        console.error('❌ Ошибка добавления маркера 2GIS:', error);
+        createAlternativeMarker(coordinates);
         return null;
+    }
+}
+
+// Функция создания альтернативного маркера
+function createAlternativeMarker(coordinates) {
+    console.log('🔄 Создаем альтернативный маркер');
+    const [lng, lat] = coordinates;
+    
+    const mapContainer = document.getElementById('map-container');
+    
+    // Удаляем старый альтернативный маркер
+    const oldMarker = document.getElementById('alternative-marker');
+    if (oldMarker) {
+        oldMarker.remove();
+    }
+    
+    // Создаем новый маркер
+    const marker = document.createElement('div');
+    marker.id = 'alternative-marker';
+    marker.className = 'alternative-marker';
+    marker.style.left = '50%';
+    marker.style.top = '50%';
+    
+    mapContainer.style.position = 'relative';
+    mapContainer.appendChild(marker);
+    
+    console.log('✅ Альтернативный маркер создан');
+}
+
+// Функция установки начальной точки с карты
+function setStartPointFromMap(coordinates) {
+    console.log('📍 Устанавливаем точку с координатами:', coordinates);
+    const [lng, lat] = coordinates;
+    
+    // Сохраняем координаты
+    routeData.coordinates = { lat, lng };
+    
+    // Обновляем поля ввода
+    const latInput = document.getElementById('latitude');
+    const lngInput = document.getElementById('longitude');
+    if (latInput && lngInput) {
+        latInput.value = lat.toFixed(6);
+        lngInput.value = lng.toFixed(6);
+        console.log('✅ Поля ввода обновлены');
+    }
+    
+    // Меняем город на "Другой город" при ручном выборе точки на карте
+    const citySelect = document.getElementById('city-select');
+    if (citySelect && citySelect.value !== 'custom') {
+        citySelect.value = 'custom';
+        routeData.city = 'custom';
+    }
+    
+    // Показываем на карте
+    if (map) {
+        // Очищаем старые маркеры
+        clearMarkers();
+        
+        // Добавляем маркер начальной точки
+        const marker = addMarker([lng, lat]);
+        
+        // Центрируем карту на выбранной точке
+        map.setCenter([lng, lat]);
+        map.setZoom(15);
+    }
+    
+    updateStatus(`📍 Начальная точка установлена: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
+}
+
+// Функция очистки маркеров
+function clearMarkers() {
+    console.log('🗑️ Очищаем маркеры');
+    
+    // Очищаем маркеры 2GIS
+    markers.forEach(marker => {
+        try {
+            marker.destroy();
+        } catch (error) {
+            console.log('Ошибка при удалении маркера 2GIS:', error);
+        }
+    });
+    markers = [];
+    
+    // Очищаем альтернативный маркер
+    const altMarker = document.getElementById('alternative-marker');
+    if (altMarker) {
+        altMarker.remove();
     }
 }
 
 // ===== ФУНКЦИИ ДЛЯ РАБОТЫ С ПОЛЬЗОВАТЕЛЬСКИМ ВВОДОМ =====
 
-// 1. Установка координат из полей ввода
+// 1. Установка координат из полей ввода ИЛИ с карты
 function setCoordinatesFromInput() {
     const latInput = document.getElementById('latitude');
     const lngInput = document.getElementById('longitude');
@@ -102,11 +290,27 @@ function setCoordinatesFromInput() {
     // Сохраняем координаты
     routeData.coordinates = { lat, lng };
     
+    // Меняем город на "Другой город" при ручном вводе координат
+    const citySelect = document.getElementById('city-select');
+    if (citySelect && citySelect.value !== 'custom') {
+        citySelect.value = 'custom';
+        routeData.city = 'custom';
+    }
+    
+    // Обновляем отображение координат города
+    const coordsDisplay = document.getElementById('city-coordinates-display');
+    if (coordsDisplay) {
+        coordsDisplay.textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    }
+    
     // Показываем на карте
     if (map) {
         // Очищаем старые маркеры
         markers.forEach(marker => marker.destroy());
         markers = [];
+        
+        // Добавляем маркер начальной точки
+        addMarker([lng, lat]);
         
         // Центрируем карту на координатах
         map.setCenter([lng, lat]);
@@ -163,7 +367,7 @@ function setTimeFromInput() {
 
 // 3. Установка приоритетов из полей ввода с проверкой уникальности
 function setPrioritiesFromInput() {
-    const priorities = ['walking', 'food', 'green', 'culture', 'infrastructure'];
+    const priorities = ['walking', 'food', 'green', 'culture', 'infrastructure', 'speed'];
     const usedValues = new Set();
     let hasErrors = false;
 
@@ -190,14 +394,14 @@ function setPrioritiesFromInput() {
             return;
         }
 
-        // Проверка уникальности ненулевых значений
-        if (value !== 0 && usedValues.has(value)) {
+        // Проверка уникальности ненулевых значений (кроме скорости)
+        if (priority !== 'speed' && value !== 0 && usedValues.has(value)) {
             updateStatus(`❌ Приоритет "${value}" уже используется. Все ненулевые приоритеты должны быть уникальными!`, 'error');
             hasErrors = true;
             return;
         }
 
-        if (value !== 0) {
+        if (value !== 0 && priority !== 'speed') {
             usedValues.add(value);
         }
 
@@ -213,6 +417,23 @@ function setPrioritiesFromInput() {
     }
 
     updateStatus('✅ Все приоритеты установлены (уникальные значения от 0 до 5)', 'success');
+    return true;
+}
+
+// 4. Установка типа маршрута (зацикленный/линейный)
+function setLoopFromInput() {
+    const loopYes = document.querySelector('input[name="loop-route"][value="yes"]');
+    const loopNo = document.querySelector('input[name="loop-route"][value="no"]');
+    
+    if (!loopYes || !loopNo) {
+        console.error('Радио-кнопки зацикленного маршрута не найдены');
+        return false;
+    }
+    
+    routeData.loop = loopYes.checked;
+    
+    const loopType = routeData.loop ? 'зацикленный' : 'линейный';
+    updateStatus(`✅ Тип маршрута установлен: ${loopType}`, 'success');
     return true;
 }
 
@@ -242,6 +463,19 @@ function getPriorityDescription(value) {
         5: "Критически важно"
     };
     return descriptions[value] || "Не определено";
+}
+
+// Функция для описания скорости
+function getSpeedDescription(value) {
+    const descriptions = {
+        0: "Очень медленно (расслабленная прогулка)",
+        1: "Медленно",
+        2: "Средне-медленно", 
+        3: "Средний темп",
+        4: "Быстро",
+        5: "Очень быстро (энергичная ходьба)"
+    };
+    return descriptions[value] || "Средний темп";
 }
 
 // Обновление цвета ползунка для шкалы 0-5
@@ -305,6 +539,12 @@ function buildRoute() {
         return;
     }
     
+    // Устанавливаем тип маршрута
+    if (!setLoopFromInput()) {
+        updateStatus('❌ Ошибка при установке типа маршрута', 'error');
+        return;
+    }
+    
     // Дополнительная проверка уникальности приоритетов
     if (!validatePriorityUniqueness()) {
         return;
@@ -315,7 +555,6 @@ function buildRoute() {
 }
 
 // Функция отправки данных маршрута на сервер
-// Улучшенная функция отправки с обработкой CORS
 function sendRouteDataToServer() {
     updateStatus('📡 Отправляем данные на сервер...', 'loading');
     
@@ -329,9 +568,11 @@ function sendRouteDataToServer() {
             PEDESTRIAN: routeData.priorities.walking.value,
             MODERN_ARCHITECTURE: routeData.priorities.infrastructure.value,
             ATTRACTIONS: routeData.priorities.culture.value,
-            GREEN_VALLEY: routeData.priorities.green.value
+            GREEN_VALLEY: routeData.priorities.green.value,
+            SPEED: routeData.priorities.speed.value
         },
-        minutes: routeData.time.hours * 60 + routeData.time.minutes
+        minutes: routeData.time.hours * 60 + routeData.time.minutes,
+        loop: routeData.loop
     };
     
     console.log('📤 Отправляем данные:', serverData);
@@ -349,7 +590,6 @@ function attemptServerRequest(serverData) {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(serverData)
-                // mode: 'cors'
             }
         },
         {
@@ -368,7 +608,7 @@ function attemptServerRequest(serverData) {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(serverData),
-                mode: 'no-cors' // Этот режим не позволит прочитать ответ, но отправит данные
+                mode: 'no-cors'
             }
         }
     ];
@@ -488,8 +728,11 @@ function validateAllData() {
         return false;
     }
     
-    // Проверяем, что есть хотя бы один приоритет > 0
-    const hasActivePriorities = Object.values(routeData.priorities).some(p => p.value > 0);
+    // Проверяем, что есть хотя бы один приоритет > 0 (кроме скорости)
+    const hasActivePriorities = Object.entries(routeData.priorities)
+        .filter(([key]) => key !== 'speed')
+        .some(([_, data]) => data.value > 0);
+    
     if (!hasActivePriorities) {
         updateStatus('❌ Установите хотя бы один приоритет больше 0', 'error');
         return false;
@@ -501,9 +744,10 @@ function validateAllData() {
 // Проверка уникальности приоритетов
 function validatePriorityUniqueness() {
     const usedValues = new Set();
-    const priorities = Object.values(routeData.priorities);
+    const priorities = Object.entries(routeData.priorities)
+        .filter(([key]) => key !== 'speed'); // Исключаем скорость из проверки уникальности
     
-    for (let priority of priorities) {
+    for (let [_, priority] of priorities) {
         if (priority.value !== 0) {
             if (usedValues.has(priority.value)) {
                 updateStatus(`❌ Ошибка: приоритет "${priority.value}" используется несколько раз. Все ненулевые приоритеты должны быть уникальными!`, 'error');
@@ -518,7 +762,7 @@ function validatePriorityUniqueness() {
 // Показать улучшенную сводку маршрута
 function showRouteSummary() {
     const activePriorities = Object.entries(routeData.priorities)
-        .filter(([_, data]) => data.value > 0)
+        .filter(([key, data]) => data.value > 0 && key !== 'speed')
         .sort(([_, a], [__, b]) => b.value - a.value)
         .map(([key, data]) => {
             const importance = getPriorityDescription(data.value);
@@ -528,8 +772,15 @@ function showRouteSummary() {
     // Определяем главный приоритет
     const mainPriority = activePriorities.length > 0 ? activePriorities[0].split(' - ')[1] : 'не определен';
     
+    const speedDescription = getSpeedDescription(routeData.priorities.speed.value);
+    const loopType = routeData.loop ? '🔁 Зацикленный (вернуться к началу)' : '➡️ Линейный (закончить в другой точке)';
+    const cityName = citiesData[routeData.city]?.name || 'Не выбран';
+    
     const summaryHTML = `
         <h4>📋 Ваш персонализированный маршрут</h4>
+        <div class="route-summary-item">
+            <strong>🏙️ Город:</strong> ${cityName}
+        </div>
         <div class="route-summary-item">
             <strong>📍 Начальная точка:</strong><br>
             Широта: ${routeData.coordinates.lat.toFixed(6)}<br>
@@ -537,6 +788,12 @@ function showRouteSummary() {
         </div>
         <div class="route-summary-item">
             <strong>⏰ Продолжительность:</strong> ${routeData.time.hours}ч ${routeData.time.minutes}мин
+        </div>
+        <div class="route-summary-item">
+            <strong>🚶 Скорость маршрута:</strong> ${routeData.priorities.speed.value} - ${speedDescription}
+        </div>
+        <div class="route-summary-item">
+            <strong>🔄 Тип маршрута:</strong> ${loopType}
         </div>
         <div class="route-summary-item">
             <strong>🎯 Главный приоритет:</strong> ${mainPriority}
@@ -567,37 +824,10 @@ function buildRouteOnMap() {
     // Добавляем начальную точку
     addMarker([baseLng, baseLat]);
     
-    // Генерируем точки маршрута на основе приоритетов
-    // generateRoutePoints(baseLng, baseLat);
-    
     // Центрируем карту
     map.setCenter([baseLng, baseLat]);
     map.setZoom(14);
 }
-
-// Генерация точек маршрута
-// function generateRoutePoints(baseLng, baseLat) {
-//     // Сортируем приоритеты по важности
-//     const sortedPriorities = Object.entries(routeData.priorities)
-//         .filter(([_, data]) => data.value > 0)
-//         .sort(([_, a], [__, b]) => b.value - a.value);
-    
-//     // Добавляем точки в зависимости от приоритетов
-//     sortedPriorities.forEach(([priority, data], index) => {
-//         const offset = (index + 1) * 0.003;
-//         setTimeout(() => {
-//             addMarker([baseLng + offset, baseLat + offset]);
-//         }, index * 800);
-//     });
-    
-//     // Добавляем конечную точку
-//     if (sortedPriorities.length > 0) {
-//         setTimeout(() => {
-//             const finalOffset = (sortedPriorities.length + 1) * 0.003;
-//             addMarker([baseLng + finalOffset, baseLat + finalOffset]);
-//         }, sortedPriorities.length * 800);
-//     }
-// }
 
 // Функция сброса карты
 function resetMap() {
@@ -625,6 +855,9 @@ function zoomOutMap() {
 function initRouteSection() {
     console.log('🚀 Инициализация секции маршрута...');
     
+    // Инициализация выбора города (ДОБАВЬТЕ ЭТУ СТРОКУ ПЕРВОЙ)
+    initCitySelect();
+    
     // Обработчики для кнопок установки данных
     document.getElementById('set-coordinates-btn').addEventListener('click', setCoordinatesFromInput);
     document.getElementById('apply-time-btn').addEventListener('click', setTimeFromInput);
@@ -635,6 +868,9 @@ function initRouteSection() {
     
     // Обработчики времени
     initTimeControls();
+    
+    // Обработчики для зацикленного маршрута
+    initLoopControls();
     
     console.log('✅ Секция маршрута инициализирована');
 }
@@ -663,7 +899,7 @@ function initTimeControls() {
     const hoursInput = document.getElementById('hours');
     const minutesInput = document.getElementById('minutes');
     
-    // Обработчики кнопок +/-
+    // Обработчики кнопок +/- 
     document.querySelectorAll('.time-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const type = this.getAttribute('data-type');
@@ -691,9 +927,34 @@ function initTimeControls() {
     updateTimeDisplay();
 }
 
+// Инициализация управления зацикленным маршрутом
+function initLoopControls() {
+    const loopRadios = document.querySelectorAll('input[name="loop-route"]');
+    
+    loopRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                const loopType = this.value === 'yes' ? 'зацикленный' : 'линейный';
+                console.log(`🔄 Тип маршрута изменен на: ${loopType}`);
+            }
+        });
+    });
+    
+    // Устанавливаем значение по умолчанию
+    document.querySelector('input[name="loop-route"][value="yes"]').checked = true;
+}
+
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Инициализация приложения...');
+    
+    // Проверка что citiesData загружен
+    if (typeof citiesData === 'undefined') {
+        console.error('❌ cities.js не загружен!');
+        updateStatus('❌ Ошибка: файл с городами не загружен', 'error');
+    } else {
+        console.log('✅ cities.js загружен, городов:', Object.keys(citiesData).length);
+    }
     
     initMap();
     initRouteSection();
