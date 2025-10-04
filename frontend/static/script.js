@@ -816,14 +816,14 @@ function sendRouteDataToServer() {
             y: routeData.coordinates.lng
         },
         priority: {
-            FOOD: routeData.priorities.food.value,
-            PEDESTRIAN: routeData.priorities.walking.value,
-            MODERN_ARCHITECTURE: routeData.priorities.infrastructure.value,
-            ATTRACTIONS: routeData.priorities.culture.value,
-            GREEN_VALLEY: routeData.priorities.green.value
+            [routeData.priorities.green.value]: "GREEN_VALLEY",
+            [routeData.priorities.culture.value]: "ATTRACTIONS",
+            [routeData.priorities.infrastructure.value]: "MODERN_ARCHITECTURE",
+            [routeData.priorities.walking.value]: "PEDESTRIAN",
+            [routeData.priorities.food.value]: "FOOD"
         },
-        city: routeData.city, // Добавляем город отдельно после приоритетов
-        speed: speedValue, // Скорость выносим отдельно вне приоритетов
+        city: routeData.city,
+        speed: speedValue,
         minutes: routeData.time.hours * 60 + routeData.time.minutes,
         loop: routeData.loop
     };
@@ -835,7 +835,6 @@ function sendRouteDataToServer() {
     // Пробуем разные подходы
     attemptServerRequest(serverData);
 }
-
 
 
 
@@ -1368,30 +1367,29 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-// // Построение маршрута на карте (демо-режим)
-// function buildRouteOnMap() {
-//     if (!map) return;
+// Построение маршрута на карте (демо-режим)
+function buildRouteOnMap() {
+    if (!map) return;
     
-//     console.log('🎭 Строим демо-маршрут');
+    console.log('🎭 Строим демо-маршрут');
     
-//     // Очищаем старые маркеры
-//     clearRouteFromMap();
+    // Очищаем старые маркеры
+    clearRouteFromMap();
     
-//     const baseLng = routeData.coordinates.lng;
-//     const baseLat = routeData.coordinates.lat;
+    const baseLng = routeData.coordinates.lng;
+    const baseLat = routeData.coordinates.lat;
+    // Создаем демо-точки маршрута вокруг начальной точки
+    const demoPoints = [
+        { lat: baseLat, lng: baseLng }, // Начальная точка
+        { lat: baseLat + 0.005, lng: baseLng + 0.005 },
+        { lat: baseLat + 0.008, lng: baseLng - 0.003 },
+        { lat: baseLat + 0.003, lng: baseLng - 0.008 },
+        { lat: baseLat - 0.004, lng: baseLng - 0.005 },
+        { lat: baseLat - 0.006, lng: baseLng + 0.002 }
+    ];
     
-//     // Создаем демо-точки маршрута вокруг начальной точки
-//     const demoPoints = [
-//         { lat: baseLat, lng: baseLng }, // Начальная точка
-//         { lat: baseLat + 0.005, lng: baseLng + 0.005 },
-//         { lat: baseLat + 0.008, lng: baseLng - 0.003 },
-//         { lat: baseLat + 0.003, lng: baseLng - 0.008 },
-//         { lat: baseLat - 0.004, lng: baseLng - 0.005 },
-//         { lat: baseLat - 0.006, lng: baseLng + 0.002 }
-//     ];
+    // Отображаем демо-точки
+    displayRoutePoints(demoPoints);
     
-//     // Отображаем демо-точки
-//     displayRoutePoints(demoPoints);
-    
-//     updateStatus('🎭 Демо-режим: маршрут построен с тестовыми точками', 'info');
-// }
+    updateStatus('🎭 Демо-режим: маршрут построен с тестовыми точками', 'info');
+}
