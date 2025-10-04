@@ -62,11 +62,30 @@ body {
 /* Герой секция */
 
 .hero {
-    background: linear-gradient(135deg, #ffd900ff 0%, #009919ff 50%, #4d47ffff  100%);
+    background: url('logo.png') center/cover no-repeat;
     color: white;
     padding: 150px 0 100px;
     text-align: center;
     margin-top: 60px;
+    position: relative;
+}
+
+/* Если нужно добавить затемнение для лучшей читаемости текста */
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3); /* Затемнение фона */
+    z-index: 1;
+}
+
+/* Чтобы текст был поверх затемнения */
+.hero > * {
+    position: relative;
+    z-index: 2;
 }
 
 .hero-title {
