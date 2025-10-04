@@ -2,27 +2,27 @@
 let map;
 let markers = [];
 const API_KEY = 'f416cc08-f627-4ac9-8709-aa1a86b0a7d4';
-const moscow = [37.6173, 55.7558]; // Москва! [долгота, широта]
+const moscow = [37.6173, 55.7558];
 
-// Переменные для хранения данных маршрута
+// Данные маршрута
 let routeData = {
     coordinates: { lat: 55.7558, lng: 37.6173 },
     priorities: {
-        "walking": { name: "Пеший маршрут", value: 0 },
-        "food": { name: "Еда", value: 0 },
-        "green": { name: "Зеленая тропа", value: 0 },
-        "culture": { name: "Памятники, музеи, монументы", value: 0 },
-        "infrastructure": { name: "Современная инфраструктура", value: 0 }
+        "walking": { name: "Пеший маршрут", value: 3 },
+        "food": { name: "Еда", value: 2 },
+        "green": { name: "Зеленая тропа", value: 1 },
+        "culture": { name: "Памятники, музеи, монументы", value: 4 },
+        "infrastructure": { name: "Современная инфраструктура", value: 5 }
     },
     time: { hours: 1, minutes: 30 }
 };
 
 // Функция обновления статуса
-function updateStatus(message, type) {
+function updateStatus(message, type = 'info') {
     const status = document.getElementById('status');
     if (status) {
         status.textContent = message;
-        status.className = `status ${type}`;
+        status.className = `status status-${type}`;
     }
     console.log(`Статус: ${message}`);
 }
@@ -32,183 +32,561 @@ function initMap() {
     try {
         updateStatus('Загружаем API карт...', 'loading');
         
-        // Проверяем загрузилась ли библиотека
         if (typeof mapgl === 'undefined') {
             throw new Error('Библиотека карт 2GIS не загрузилась');
         }
 
-        updateStatus('Создаем карту Москвы с твоим ключом...', 'loading');
-
-        // Создаем карту с настоящим ключом - ЦЕНТР МОСКВЫ!
         map = new mapgl.Map('map-container', {
-            center: moscow, // Москва!
+            center: moscow,
             zoom: 13,
             key: API_KEY
         });
 
-        // Обработчик успешной загрузки карты
         map.on('load', () => {
-            updateStatus('🎉 Карта 2GIS Москвы успешно загружена! Теперь можно похакать!', 'success');
-            
-            // Добавляем стартовый маркер в МОСКВЕ!
-            addMarker(moscow, '🎯 Эпицентр хакатона в Москве! Тут все сходят с ума');
-            
-            // Обработчик клика по карте
-            map.on('click', (event) => {
-                const coords = [event.lngLat.lng, event.lngLat.lat];
-                const funnyMessages = [
-                    "🤯 Тут я сломал мозг в Москве",
-                    "🐛 Здесь был баг на Красной площади",
-                    "💥 Взрыв нейронов в метро",
-                    "🆘 SOS! Помогите! Я в Москве!",
-                    "👻 Призрак кода в Охотном ряду",
-                    "💀 Код не работает как пробки на Садовом",
-                    "🎯 Метка паники у Кремля",
-                    "🚨 Критическая ситуация в ЦАО"
-                ];
-                const randomMessage = funnyMessages[Math.floor(Math.random() * funnyMessages.length)];
-                addMarker(coords, `${randomMessage}\nКоординаты: ${coords[0].toFixed(4)}, ${coords[1].toFixed(4)}`);
-            });
-        });
-
-        // Обработчик ошибок карты
-        map.on('error', (error) => {
-            updateStatus('❌ Ошибка карты: ' + error.message, 'error');
+            updateStatus('🎉 Карта 2GIS Москвы успешно загружена!', 'success');
         });
 
     } catch (error) {
         updateStatus('💥 Ошибка инициализации: ' + error.message, 'error');
-        console.error('Детали ошибки:', error);
     }
 }
 
 // Функция добавления маркера
-function addMarker(coordinates = null, label = 'Новая точка хакатона в Москве') {
-    if (!map) {
-        updateStatus('Карта еще не загрузилась!', 'error');
-        return;
-    }
-    
-    // Если координаты не указаны, генерируем случайные рядом с МОСКВОЙ
-    const coords = coordinates || [
-        moscow[0] + (Math.random() - 0.5) * 0.02, // долгота
-        moscow[1] + (Math.random() - 0.5) * 0.02  // широта
-    ];
+function addMarker(coordinates = null) {
+    if (!map) return null;
     
     try {
         const marker = new mapgl.Marker(map, {
-            coordinates: coords,
-            label: label,
-            icon: 'https://docs.2gis.com/img/dot-marker.svg'
+            coordinates: coordinates
         });
         
         markers.push(marker);
-        updateStatus(`✅ Добавлен маркер в Москве: ${label.split('\n')[0]}`, 'success');
-        
+        return marker;
     } catch (error) {
-        updateStatus('❌ Ошибка добавления маркера: ' + error.message, 'error');
+        console.error('Ошибка добавления маркера:', error);
+        return null;
     }
 }
 
-// ===== ФУНКЦИОНАЛ СЕКЦИИ "О СЕРВИСЕ" =====
+// ===== ФУНКЦИИ ДЛЯ РАБОТЫ С ПОЛЬЗОВАТЕЛЬСКИМ ВВОДОМ =====
 
-// Инициализация функционала секции "О сервисе"
+// 1. Установка координат из полей ввода
+function setCoordinatesFromInput() {
+    const latInput = document.getElementById('latitude');
+    const lngInput = document.getElementById('longitude');
+    
+    if (!latInput || !lngInput) {
+        updateStatus('❌ Поля координат не найдены', 'error');
+        return false;
+    }
+
+    const lat = parseFloat(latInput.value.replace(',', '.'));
+    const lng = parseFloat(lngInput.value.replace(',', '.'));
+    
+    // Валидация координат
+    if (isNaN(lat) || isNaN(lng)) {
+        updateStatus('❌ Введите числа в поля координат', 'error');
+        return false;
+    }
+
+    if (lat < -90 || lat > 90) {
+        updateStatus('❌ Широта должна быть от -90 до 90', 'error');
+        return false;
+    }
+
+    if (lng < -180 || lng > 180) {
+        updateStatus('❌ Долгота должна быть от -180 до 180', 'error');
+        return false;
+    }
+
+    // Сохраняем координаты
+    routeData.coordinates = { lat, lng };
+    
+    // Показываем на карте
+    if (map) {
+        // Очищаем старые маркеры
+        markers.forEach(marker => marker.destroy());
+        markers = [];
+        
+        // Центрируем карту на координатах
+        map.setCenter([lng, lat]);
+        map.setZoom(15);
+    }
+
+    updateStatus(`✅ Координаты установлены: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
+    return true;
+}
+
+// 2. Установка времени из полей ввода
+function setTimeFromInput() {
+    const hoursInput = document.getElementById('hours');
+    const minutesInput = document.getElementById('minutes');
+    
+    if (!hoursInput || !minutesInput) {
+        updateStatus('❌ Поля времени не найдены', 'error');
+        return false;
+    }
+
+    const hours = parseInt(hoursInput.value);
+    const minutes = parseInt(minutesInput.value);
+    
+    // Валидация времени
+    if (isNaN(hours) || isNaN(minutes)) {
+        updateStatus('❌ Введите числа в поля времени', 'error');
+        return false;
+    }
+
+    if (hours < 0 || hours > 23) {
+        updateStatus('❌ Часы должны быть от 0 до 23', 'error');
+        return false;
+    }
+
+    if (minutes < 0 || minutes > 59) {
+        updateStatus('❌ Минуты должны быть от 0 до 59', 'error');
+        return false;
+    }
+
+    if (hours === 0 && minutes === 0) {
+        updateStatus('❌ Время маршрута не может быть 0', 'error');
+        return false;
+    }
+
+    // Сохраняем время
+    routeData.time = { hours, minutes };
+    
+    // Обновляем отображение
+    updateTimeDisplay();
+    
+    updateStatus(`✅ Время установлено: ${hours}ч ${minutes}мин`, 'success');
+    return true;
+}
+
+// 3. Установка приоритетов из полей ввода с проверкой уникальности
+function setPrioritiesFromInput() {
+    const priorities = ['walking', 'food', 'green', 'culture', 'infrastructure'];
+    const usedValues = new Set();
+    let hasErrors = false;
+
+    priorities.forEach(priority => {
+        const input = document.querySelector(`[data-priority="${priority}"]`);
+        if (!input) {
+            console.error(`Ползунок приоритета ${priority} не найден`);
+            hasErrors = true;
+            return;
+        }
+
+        const value = parseInt(input.value);
+        
+        // Валидация приоритета (0-5)
+        if (isNaN(value)) {
+            updateStatus(`❌ Приоритет "${routeData.priorities[priority].name}" должен быть числом`, 'error');
+            hasErrors = true;
+            return;
+        }
+
+        if (value < 0 || value > 5) {
+            updateStatus(`❌ Приоритет "${routeData.priorities[priority].name}" должен быть от 0 до 5`, 'error');
+            hasErrors = true;
+            return;
+        }
+
+        // Проверка уникальности ненулевых значений
+        if (value !== 0 && usedValues.has(value)) {
+            updateStatus(`❌ Приоритет "${value}" уже используется. Все ненулевые приоритеты должны быть уникальными!`, 'error');
+            hasErrors = true;
+            return;
+        }
+
+        if (value !== 0) {
+            usedValues.add(value);
+        }
+
+        // Сохраняем значение
+        routeData.priorities[priority].value = value;
+        
+        // Обновляем отображение ползунка
+        updateSliderDisplay(priority, value);
+    });
+
+    if (hasErrors) {
+        return false;
+    }
+
+    updateStatus('✅ Все приоритеты установлены (уникальные значения от 0 до 5)', 'success');
+    return true;
+}
+
+// Обновление отображения ползунка
+function updateSliderDisplay(priority, value) {
+    const slider = document.querySelector(`[data-priority="${priority}"]`);
+    const valueDisplay = slider ? slider.nextElementSibling : null;
+    
+    if (valueDisplay) {
+        valueDisplay.textContent = value;
+        valueDisplay.title = getPriorityDescription(value);
+    }
+    if (slider) {
+        slider.value = value;
+        updateSliderColor(slider, value);
+    }
+}
+
+// Функция для описания важности
+function getPriorityDescription(value) {
+    const descriptions = {
+        0: "Не важно",
+        1: "Совсем не важно", 
+        2: "Слабо важно",
+        3: "Средне важно",
+        4: "Очень важно",
+        5: "Критически важно"
+    };
+    return descriptions[value] || "Не определено";
+}
+
+// Обновление цвета ползунка для шкалы 0-5
+function updateSliderColor(slider, value) {
+    slider.className = 'priority-slider';
+    
+    const colorClasses = {
+        0: 'priority-0',
+        1: 'priority-1',
+        2: 'priority-2', 
+        3: 'priority-3',
+        4: 'priority-4',
+        5: 'priority-5'
+    };
+    
+    slider.classList.add(colorClasses[value] || 'priority-0');
+}
+
+// Обновление отображения времени
+function updateTimeDisplay() {
+    const hours = routeData.time.hours;
+    const minutes = routeData.time.minutes;
+    
+    let displayText = '';
+    if (hours > 0) {
+        displayText += `${hours} час${getRussianEnding(hours, ['', 'а', 'ов'])} `;
+    }
+    if (minutes > 0) {
+        displayText += `${minutes} минут${getRussianEnding(minutes, ['а', 'ы', ''])}`;
+    }
+    
+    const timeDisplay = document.getElementById('total-time');
+    if (timeDisplay) {
+        timeDisplay.textContent = displayText.trim();
+    }
+}
+
+// Функция для русских окончаний
+function getRussianEnding(number, endings) {
+    number = number % 100;
+    if (number >= 11 && number <= 19) {
+        return endings[2];
+    }
+    number = number % 10;
+    if (number === 1) {
+        return endings[0];
+    }
+    if (number >= 2 && number <= 4) {
+        return endings[1];
+    }
+    return endings[2];
+}
+
+// ===== ОСНОВНАЯ ФУНКЦИЯ ПОСТРОЕНИЯ МАРШРУТА =====
+
+function buildRoute() {
+    console.log('🚀 Начинаем построение маршрута...', routeData);
+    
+    // Проверяем все данные
+    if (!validateAllData()) {
+        return;
+    }
+    
+    // Дополнительная проверка уникальности приоритетов
+    if (!validatePriorityUniqueness()) {
+        return;
+    }
+    
+    // Отправляем данные на сервер
+    sendRouteDataToServer();
+}
+
+// Функция отправки данных маршрута на сервер
+function sendRouteDataToServer() {
+    updateStatus('📡 Отправляем данные на сервер...', 'loading');
+    
+    // Преобразуем данные в формат сервера
+    const serverData = {
+        point: {
+            x: routeData.coordinates.lng, // Долгота
+            y: routeData.coordinates.lat  // Широта
+        },
+        priority: {
+            FOOD: routeData.priorities.food.value,
+            PEDESTRIAN: routeData.priorities.walking.value,
+            MODERN_ARCHITECTURE: routeData.priorities.infrastructure.value,
+            ATTRACTIONS: routeData.priorities.culture.value,
+            GREEN_VALLEY: routeData.priorities.green.value
+        },
+        minutes: routeData.time.hours * 60 + routeData.time.minutes
+    };
+    
+    console.log('📤 Отправляем данные на сервер:', serverData);
+    
+    fetch('http://127.0.0.1:8080/api/route', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(serverData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Ошибка сервера: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('✅ Сервер ответил:', data);
+        updateStatus('✅ Данные успешно отправлены на сервер!', 'success');
+        
+        // Обрабатываем ответ от сервера
+        handleServerResponse(data);
+    })
+    .catch(error => {
+        console.error('❌ Ошибка отправки данных на сервер:', error);
+        updateStatus('❌ Ошибка отправки на сервер. Продолжаем в демо-режиме', 'error');
+        
+        // Демо-режим: продолжаем работу без сервера
+        showRouteSummary();
+        buildRouteOnMap();
+    });
+}
+
+// Функция обработки ответа от сервера
+function handleServerResponse(serverResponse) {
+    console.log('🔄 Обрабатываем ответ сервера:', serverResponse);
+    
+    // Показываем сводку с данными, которые отправили
+    showRouteSummary();
+    
+    // Добавляем информацию от сервера
+    showServerResponseSummary(serverResponse);
+    
+    // Строим маршрут на карте
+    buildRouteOnMap();
+}
+
+// Функция для отображения сводки с ответом сервера
+function showServerResponseSummary(serverResponse) {
+    const summaryElement = document.getElementById('route-summary');
+    
+    let serverInfoHTML = '';
+    
+    if (serverResponse.message) {
+        serverInfoHTML = `
+            <div class="server-response" style="margin-top: 20px; padding: 15px; background: #e8f5e8; border-radius: 10px; border-left: 5px solid #4CAF50;">
+                <h4>📡 Ответ сервера:</h4>
+                <div class="server-message" style="font-weight: bold; color: #2e7d32;">${serverResponse.message}</div>
+                ${serverResponse.route ? '<div class="route-info">✅ Маршрут получен от сервера</div>' : ''}
+                ${serverResponse.points ? `<div class="points-info">📍 Точек интереса: ${serverResponse.points.length}</div>` : ''}
+            </div>
+        `;
+    }
+    
+    // Добавляем информацию от сервера к существующей сводке
+    const existingSummary = summaryElement.innerHTML;
+    summaryElement.innerHTML = existingSummary + serverInfoHTML;
+}
+
+// Проверка всех данных
+function validateAllData() {
+    // Проверяем координаты
+    if (!routeData.coordinates || !routeData.coordinates.lat || !routeData.coordinates.lng) {
+        updateStatus('❌ Сначала установите координаты начала маршрута', 'error');
+        return false;
+    }
+    
+    // Проверяем время
+    if (routeData.time.hours === 0 && routeData.time.minutes === 0) {
+        updateStatus('❌ Установите время маршрута', 'error');
+        return false;
+    }
+    
+    // Проверяем, что есть хотя бы один приоритет > 0
+    const hasActivePriorities = Object.values(routeData.priorities).some(p => p.value > 0);
+    if (!hasActivePriorities) {
+        updateStatus('❌ Установите хотя бы один приоритет больше 0', 'error');
+        return false;
+    }
+    
+    return true;
+}
+
+// Проверка уникальности приоритетов
+function validatePriorityUniqueness() {
+    const usedValues = new Set();
+    const priorities = Object.values(routeData.priorities);
+    
+    for (let priority of priorities) {
+        if (priority.value !== 0) {
+            if (usedValues.has(priority.value)) {
+                updateStatus(`❌ Ошибка: приоритет "${priority.value}" используется несколько раз. Все ненулевые приоритеты должны быть уникальными!`, 'error');
+                return false;
+            }
+            usedValues.add(priority.value);
+        }
+    }
+    return true;
+}
+
+// Показать улучшенную сводку маршрута
+function showRouteSummary() {
+    const activePriorities = Object.entries(routeData.priorities)
+        .filter(([_, data]) => data.value > 0)
+        .sort(([_, a], [__, b]) => b.value - a.value)
+        .map(([key, data]) => {
+            const importance = getPriorityDescription(data.value);
+            return `${data.value} - ${data.name} (${importance})`;
+        });
+    
+    // Определяем главный приоритет
+    const mainPriority = activePriorities.length > 0 ? activePriorities[0].split(' - ')[1] : 'не определен';
+    
+    const summaryHTML = `
+        <h4>📋 Ваш персонализированный маршрут</h4>
+        <div class="route-summary-item">
+            <strong>📍 Начальная точка:</strong><br>
+            Широта: ${routeData.coordinates.lat.toFixed(6)}<br>
+            Долгота: ${routeData.coordinates.lng.toFixed(6)}
+        </div>
+        <div class="route-summary-item">
+            <strong>⏰ Продолжительность:</strong> ${routeData.time.hours}ч ${routeData.time.minutes}мин
+        </div>
+        <div class="route-summary-item">
+            <strong>🎯 Главный приоритет:</strong> ${mainPriority}
+        </div>
+        <div class="route-summary-item">
+            <strong>📊 Шкала важности:</strong><br>
+            ${activePriorities.length > 0 ? activePriorities.join('<br>') : 'Приоритеты не установлены'}
+        </div>
+        <div class="priority-scale-info">
+            <small>📝 Шкала: 0-не важно, 1-совсем не важно, 2-слабо важно, 3-средне важно, 4-очень важно, 5-критически важно</small>
+        </div>
+    `;
+    
+    document.getElementById('route-summary').innerHTML = summaryHTML;
+}
+
+// Построение маршрута на карте
+function buildRouteOnMap() {
+    if (!map) return;
+    
+    // Очищаем старые маркеры
+    markers.forEach(marker => marker.destroy());
+    markers = [];
+    
+    const baseLng = routeData.coordinates.lng;
+    const baseLat = routeData.coordinates.lat;
+    
+    // Добавляем начальную точку
+    addMarker([baseLng, baseLat]);
+    
+    // Генерируем точки маршрута на основе приоритетов
+    // generateRoutePoints(baseLng, baseLat);
+    
+    // Центрируем карту
+    map.setCenter([baseLng, baseLat]);
+    map.setZoom(14);
+}
+
+// Генерация точек маршрута
+// function generateRoutePoints(baseLng, baseLat) {
+//     // Сортируем приоритеты по важности
+//     const sortedPriorities = Object.entries(routeData.priorities)
+//         .filter(([_, data]) => data.value > 0)
+//         .sort(([_, a], [__, b]) => b.value - a.value);
+    
+//     // Добавляем точки в зависимости от приоритетов
+//     sortedPriorities.forEach(([priority, data], index) => {
+//         const offset = (index + 1) * 0.003;
+//         setTimeout(() => {
+//             addMarker([baseLng + offset, baseLat + offset]);
+//         }, index * 800);
+//     });
+    
+//     // Добавляем конечную точку
+//     if (sortedPriorities.length > 0) {
+//         setTimeout(() => {
+//             const finalOffset = (sortedPriorities.length + 1) * 0.003;
+//             addMarker([baseLng + finalOffset, baseLat + finalOffset]);
+//         }, sortedPriorities.length * 800);
+//     }
+// }
+
+// Функция сброса карты
+function resetMap() {
+    if (!map) return;
+    
+    if (confirm('Точно сбросить карту? Все маркеры пропадут!')) {
+        markers.forEach(marker => marker.destroy());
+        markers = [];
+        map.setCenter(moscow);
+        map.setZoom(13);
+        updateStatus('🗑️ Карта очищена!', 'success');
+    }
+}
+
+// Функция отдаления карты
+function zoomOutMap() {
+    if (map) {
+        map.setZoom(11);
+        updateStatus('🔍 Карта отдалена', 'success');
+    }
+}
+
+// ===== ИНИЦИАЛИЗАЦИЯ =====
+
 function initRouteSection() {
     console.log('🚀 Инициализация секции маршрута...');
     
-    // 1. Координаты - обработчик кнопки
-    document.getElementById('set-coordinates-btn').addEventListener('click', setCoordinatesOnMap);
+    // Обработчики для кнопок установки данных
+    document.getElementById('set-coordinates-btn').addEventListener('click', setCoordinatesFromInput);
+    document.getElementById('apply-time-btn').addEventListener('click', setTimeFromInput);
+    document.getElementById('build-route-btn').addEventListener('click', buildRoute);
     
-    // 2. Приоритеты - обработчики ползунков
+    // Обработчики ползунков приоритетов
     initPrioritySliders();
     
-    // 3. Время - обработчики кнопок +/-
+    // Обработчики времени
     initTimeControls();
-    
-    // 4. Кнопка построения маршрута
-    document.getElementById('build-route-btn').addEventListener('click', buildRoute);
     
     console.log('✅ Секция маршрута инициализирована');
 }
 
-// 1. Функция установки координат на карте
-function setCoordinatesOnMap() {
-    const latInput = document.getElementById('latitude');
-    const lngInput = document.getElementById('longitude');
-    
-    const lat = parseFloat(latInput.value);
-    const lng = parseFloat(lngInput.value);
-    
-    if (isNaN(lat) || isNaN(lng)) {
-        updateStatus('❌ Введите корректные координаты!', 'error');
-        return;
-    }
-    
-    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-        updateStatus('❌ Координаты вне допустимого диапазона!', 'error');
-        return;
-    }
-    
-    // Сохраняем координаты
-    routeData.coordinates = { lat, lng };
-    
-    // Добавляем маркер на карту
-    if (map) {
-        addMarker([lng, lat], `🎯 Начало маршрута\nШирота: ${lat}\nДолгота: ${lng}`);
-        map.setCenter([lng, lat]);
-        map.setZoom(15);
-    }
-    
-    updateStatus(`✅ Координаты установлены: ${lat}, ${lng}`, 'success');
-}
-
-// 2. Функция инициализации ползунков приоритетов
+// Инициализация ползунков приоритетов
 function initPrioritySliders() {
     const sliders = document.querySelectorAll('.priority-slider');
     
     sliders.forEach(slider => {
         const priorityKey = slider.getAttribute('data-priority');
-        const valueDisplay = slider.nextElementSibling;
         
         // Устанавливаем начальное значение
-        valueDisplay.textContent = slider.value;
-        routeData.priorities[priorityKey].value = parseInt(slider.value);
+        slider.value = routeData.priorities[priorityKey].value;
+        updateSliderDisplay(priorityKey, routeData.priorities[priorityKey].value);
         
         // Обработчик изменения ползунка
         slider.addEventListener('input', function() {
             const value = parseInt(this.value);
-            valueDisplay.textContent = value;
-            routeData.priorities[priorityKey].value = value;
-            
-            // Меняем цвет ползунка
-            updateSliderColor(this, value);
-            
-            console.log(`🎯 Приоритет "${routeData.priorities[priorityKey].name}" изменен на: ${value}`);
+            updateSliderDisplay(priorityKey, value);
         });
-        
-        // Инициализируем цвет
-        updateSliderColor(slider, parseInt(slider.value));
     });
 }
 
-// Функция обновления цвета ползунка
-function updateSliderColor(slider, value) {
-    // Убираем старые классы
-    slider.className = 'priority-slider';
-    
-    // Добавляем класс в зависимости от значения
-    if (value === 0) {
-        slider.classList.add('priority-0');
-    } else if (value <= 3) {
-        slider.classList.add('priority-low');
-    } else if (value <= 6) {
-        slider.classList.add('priority-medium');
-    } else {
-        slider.classList.add('priority-high');
-    }
-}
-
-// 3. Функция инициализации управления временем
+// Инициализация управления временем
 function initTimeControls() {
     const hoursInput = document.getElementById('hours');
     const minutesInput = document.getElementById('minutes');
@@ -237,380 +615,27 @@ function initTimeControls() {
     hoursInput.addEventListener('input', updateTimeDisplay);
     minutesInput.addEventListener('input', updateTimeDisplay);
     
-    // Кнопка применения времени
-    document.getElementById('apply-time-btn').addEventListener('click', function() {
-        const hours = parseInt(hoursInput.value) || 0;
-        const minutes = parseInt(minutesInput.value) || 0;
-        
-        routeData.time = { hours, minutes };
-        updateStatus(`⏰ Время установлено: ${hours}ч ${minutes}мин`, 'success');
-    });
-    
     // Инициализируем отображение времени
     updateTimeDisplay();
 }
 
-// Обновление отображения времени
-function updateTimeDisplay() {
-    const hours = parseInt(document.getElementById('hours').value) || 0;
-    const minutes = parseInt(document.getElementById('minutes').value) || 0;
-    
-    let displayText = '';
-    if (hours > 0) {
-        displayText += `${hours} час${getRussianEnding(hours, ['', 'а', 'ов'])} `;
-    }
-    if (minutes > 0) {
-        displayText += `${minutes} минут${getRussianEnding(minutes, ['а', 'ы', ''])}`;
-    }
-    if (hours === 0 && minutes === 0) {
-        displayText = '0 минут';
-    }
-    
-    document.getElementById('total-time').textContent = displayText.trim();
-}
-
-// Функция для русских окончаний
-function getRussianEnding(number, endings) {
-    number = number % 100;
-    if (number >= 11 && number <= 19) {
-        return endings[2];
-    }
-    number = number % 10;
-    if (number === 1) {
-        return endings[0];
-    }
-    if (number >= 2 && number <= 4) {
-        return endings[1];
-    }
-    return endings[2];
-}
-
-// 4. Функция построения маршрута
-function buildRoute() {
-    console.log('🚀 Начинаем построение маршрута...', routeData);
-    
-    // Проверяем данные
-    if (!routeData.coordinates) {
-        updateStatus('❌ Сначала установите координаты!', 'error');
-        return;
-    }
-    
-    // Собираем активные приоритеты (только те, что > 0)
-    const activePriorities = Object.entries(routeData.priorities)
-        .filter(([_, data]) => data.value > 0)
-        .sort(([_, a], [__, b]) => b.value - a.value) // Сортируем по убыванию
-        .map(([key, data]) => `${data.value}/10 - ${data.name}`);
-    
-    // Формируем сводку
-    const summaryHTML = `
-        <h4>📋 Сводка по маршруту:</h4>
-        <div class="route-summary-item">
-            <strong>📍 Начальная точка:</strong><br>
-            Широта: ${routeData.coordinates.lat}<br>
-            Долгота: ${routeData.coordinates.lng}
-        </div>
-        <div class="route-summary-item">
-            <strong>⏰ Время в пути:</strong> ${routeData.time.hours}ч ${routeData.time.minutes}мин
-        </div>
-        <div class="route-summary-item">
-            <strong>🎯 Приоритеты:</strong><br>
-            ${activePriorities.length > 0 ? activePriorities.join('<br>') : 'Приоритеты не установлены'}
-        </div>
-        <div class="route-summary-item">
-            <strong>📊 Статус:</strong> <span style="color: #27ae60;">Маршрут построен успешно! 🎉</span>
-        </div>
-    `;
-    
-    // Показываем сводку
-    document.getElementById('route-summary').innerHTML = summaryHTML;
-    
-    // Показываем на карте (демо-функция)
-    if (map) {
-        // Очищаем старые маркеры
-        markers.forEach(marker => marker.destroy());
-        markers = [];
-        
-        // Добавляем маркер начала маршрута
-        addMarker(
-            [routeData.coordinates.lng, routeData.coordinates.lat], 
-            `🚀 Начало маршрута\nВремя: ${routeData.time.hours}ч ${routeData.time.minutes}мин\nПриоритеты: ${activePriorities.length}`
-        );
-        
-        // Добавляем точки маршрута в зависимости от приоритетов
-        addRoutePointsByPriority();
-    }
-    
-    updateStatus('🎉 Маршрут успешно построен! Смотри сводку ниже.', 'success');
-}
-
-// Функция добавления точек маршрута в зависимости от приоритетов
-function addRoutePointsByPriority() {
-    const baseLng = routeData.coordinates.lng;
-    const baseLat = routeData.coordinates.lat;
-    
-    // Определяем типы точек на основе приоритетов
-    const pointTypes = [];
-    
-    if (routeData.priorities.food.value > 0) {
-        pointTypes.push('🍕 Еда');
-    }
-    if (routeData.priorities.culture.value > 0) {
-        pointTypes.push('🏛️ Культура');
-    }
-    if (routeData.priorities.green.value > 0) {
-        pointTypes.push('🌳 Природа');
-    }
-    if (routeData.priorities.infrastructure.value > 0) {
-        pointTypes.push('🏢 Инфраструктура');
-    }
-    if (routeData.priorities.walking.value > 0) {
-        pointTypes.push('🚶 Пеший маршрут');
-    }
-    
-    // Создаем демо-точки
-    const demoPoints = [
-        { lng: baseLng + 0.005, lat: baseLat + 0.003, type: pointTypes[0] || '📍 Точка 1' },
-        { lng: baseLng + 0.01, lat: baseLat - 0.002, type: pointTypes[1] || '📍 Точка 2' },
-        { lng: baseLng + 0.008, lat: baseLat - 0.006, type: pointTypes[2] || '📍 Точка 3' },
-        { lng: baseLng + 0.012, lat: baseLat - 0.004, type: '🏁 Конец маршрута' }
-    ];
-    
-    demoPoints.forEach((point, index) => {
-        setTimeout(() => {
-            addMarker(
-                [point.lng, point.lat], 
-                `${point.type}\nЭтап ${index + 1}`
-            );
-        }, index * 500);
-    });
-    
-    // Центрируем карту на маршруте
-    setTimeout(() => {
-        map.setCenter([baseLng + 0.006, baseLat]);
-        map.setZoom(14);
-    }, demoPoints.length * 500);
-}
-
-// Функция поиска "кафе" в МОСКВЕ (демо-функция)
-function findCafe() {
-    if (!map) {
-        updateStatus('Карта еще не загрузилась!', 'error');
-        return;
-    }
-    
-    updateStatus('🔍 Ищем места для передышки в Москве...', 'loading');
-    
-    // Демо-данные "кафе" в МОСКВЕ
-    const cafes = [
-        { 
-            coords: [37.6173, 55.7558], // Красная площадь
-            name: '☕ Кофейня "У Кремля"',
-            desc: 'Пьем кофе и смотрим на Спасскую башню'
-        },
-        { 
-            coords: [37.6092, 55.7539], // Охотный ряд
-            name: '🍕 Кафе "Код и Пельмени"',
-            desc: 'Пишем код и едим пельмени у ГУМа'
-        },
-        { 
-            coords: [37.6254, 55.7580], // Тверская
-            name: '🥤 Бар "Московский JavaScript"',
-            desc: 'Обсуждаем асинхронность на Тверской'
-        },
-        { 
-            coords: [37.6321, 55.7610], // Пушкинская площадь
-            name: '🍔 Фастфуд "Баги на Пушкинской"',
-            desc: 'Исправляешь баги - получаешь бургер'
-        },
-        { 
-            coords: [37.6005, 55.7480], // Павелецкая
-            name: '🍩 Пончиковая "React"',
-            desc: 'Пончики + React = счастье'
-        },
-        { 
-            coords: [37.6464, 55.7659], // Садовое кольцо
-            name: '☕ Кофе "В пробках"',
-            desc: 'Пьем кофе пока стоим в пробке'
-        }
-    ];
-    
-    // Добавляем маркеры кафе с задержкой для анимации
-    cafes.forEach((cafe, index) => {
-        setTimeout(() => {
-            addMarker(cafe.coords, `${cafe.name}\n${cafe.desc}`);
-        }, index * 500);
-    });
-    
-    setTimeout(() => {
-        updateStatus('✅ Найдено 6 московских мест для спасения!', 'success');
-    }, cafes.length * 500);
-}
-
-// Функция показа известных мест Москвы
-function showMoscowPlaces() {
-    if (!map) return;
-    
-    updateStatus('🏛️ Показываю известные места Москвы...', 'loading');
-    
-    const moscowPlaces = [
-        {
-            coords: [37.6230, 55.7539], // Красная площадь
-            name: '🏛️ Красная площадь',
-            desc: 'Тут Минин и Пожарский стояли'
-        },
-        {
-            coords: [37.6173, 55.7517], // Кремль
-            name: '🏰 Московский Кремль',
-            desc: 'Тут Путин работает'
-        },
-        {
-            coords: [37.6049, 55.7413], // Парк Горького
-            name: '🌳 Парк Горького',
-            desc: 'Тут все бегают и катаются на великах'
-        },
-        {
-            coords: [37.6558, 55.7903], // ВДНХ
-            name: '🎪 ВДНХ',
-            desc: 'Тут фонтан и ракета'
-        },
-        {
-            coords: [37.6790, 55.7241], // МГУ
-            name: '🎓 МГУ',
-            desc: 'Тут умные люди'
-        },
-        {
-            coords: [37.5345, 55.8304], // Сколково
-            name: '💡 Сколково',
-            desc: 'Тут инновации и стартапы'
-        },
-        {
-            coords: [37.5530, 55.7030], // Москва-Сити
-            name: '🏙️ Москва-Сити',
-            desc: 'Тут небоскребы и богатые'
-        },
-        {
-            coords: [37.6184, 55.7337], // Храм Христа Спасителя
-            name: '⛪ Храм Христа Спасителя',
-            desc: 'Тут молятся за успешный деплой'
-        }
-    ];
-    
-    // Очищаем старые маркеры
-    markers.forEach(marker => {
-        try {
-            marker.destroy();
-        } catch (error) {
-            console.error('Ошибка удаления маркера:', error);
-        }
-    });
-    markers = [];
-    
-    // Добавляем новые маркеры
-    moscowPlaces.forEach((place, index) => {
-        setTimeout(() => {
-            addMarker(place.coords, `${place.name}\n${place.desc}`);
-        }, index * 300);
-    });
-    
-    // Центрируем карту на Москве
-    map.setCenter(moscow);
-    map.setZoom(11);
-    
-    setTimeout(() => {
-        updateStatus('✅ Показаны известные места Москвы!', 'success');
-    }, moscowPlaces.length * 300);
-}
-
-// Функция сброса карты
-function resetMap() {
-    if (!map) return;
-    
-    if (confirm('Точно сбросить карту? Все маркеры пропадут!')) {
-        // Удаляем все маркеры
-        markers.forEach(marker => {
-            try {
-                marker.destroy();
-            } catch (error) {
-                console.error('Ошибка удаления маркера:', error);
-            }
-        });
-        markers = [];
-        
-        // Возвращаем карту в начальное положение - МОСКВА!
-        map.setCenter(moscow);
-        map.setZoom(13);
-        
-        // Добавляем начальный маркер в МОСКВЕ
-        setTimeout(() => {
-            addMarker(moscow, '🔄 Карта сброшена! Начинаем заново в Москве!');
-        }, 500);
-        
-        updateStatus('🗑️ Карта очищена! Начинаем сначала в Москве!', 'success');
-    }
-}
-
-// Плавная прокрутка для навигации
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
-    });
-});
-
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Инициализация сайта с картой МОСКВЫ...');
+    console.log('🚀 Инициализация приложения...');
     
-    // Инициализируем карту
     initMap();
-    
-    // Инициализируем секцию маршрута
     initRouteSection();
     
-    // Назначаем обработчики кнопок карты
-    document.getElementById('add-marker-btn').addEventListener('click', function() {
-        addMarker();
-    });
-    
-    document.getElementById('find-cafe-btn').addEventListener('click', findCafe);
-    document.getElementById('moscow-places-btn').addEventListener('click', showMoscowPlaces);
+    // Обработчики кнопок карты
+    document.getElementById('moscow-places-btn').addEventListener('click', zoomOutMap);
     document.getElementById('reset-map-btn').addEventListener('click', resetMap);
     
-    // Обработчики для кнопок в герое
-    document.querySelector('.btn-primary').addEventListener('click', function() {
-        updateStatus('🤷‍♀️ Чук нежно нет - и правда ничего нет!', 'loading');
-        setTimeout(() => {
-            updateStatus('Но маршрут и карта МОСКВЫ работают! 🎉', 'success');
-        }, 2000);
-    });
-    
+    // Обработчик для кнопки в герое
     document.querySelector('.btn-secondary').addEventListener('click', function() {
         document.querySelector('#about').scrollIntoView({
             behavior: 'smooth'
         });
     });
     
-    console.log('✅ Сайт с картой МОСКВЫ и маршрутом инициализирован! Удачи на хакатоне!');
+    console.log('✅ Приложение инициализировано!');
 });
-
-// Глобальные функции для отладки
-window.debugMap = function() {
-    console.log('🔧 Отладочная информация:');
-    console.log('- Карта:', map ? '✅ Загружена' : '❌ Не загружена');
-    console.log('- Маркеры:', markers.length);
-    console.log('- API ключ:', API_KEY);
-    console.log('- Центр карты:', moscow);
-    console.log('- Данные маршрута:', routeData);
-};
-
-// Автоматический вызов отладки при ошибках
-window.onerror = function(message, source, lineno, colno, error) {
-    console.error('💥 Глобальная ошибка:', error);
-    updateStatus('💥 Произошла ошибка: ' + message, 'error');
-};
