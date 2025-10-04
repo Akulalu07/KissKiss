@@ -13,8 +13,12 @@ public class Data {
 
     private final Point point;
 
-    private final HashMap<PriorityType, Integer> priority;
+    private final HashMap<Integer, PriorityType> priority;
 
     private final int minutes;
+
+    private final int speed;
+
+    private final String city;
 
 }

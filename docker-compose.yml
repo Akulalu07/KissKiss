@@ -2,6 +2,8 @@ services:
   backend:
     build: .
     container_name: kisskis-backend
+    environment:
+      - API-KEY=e50d3992-8076-47d8-bc3c-9add5a142f20
     ports:
       - "8080:8080"
     networks:
