@@ -137,8 +137,8 @@ public class Alcorithm {
                       "transport": "walking"
                     }
                 """,
-                startPoint.getY(), startPoint.getX(),
-                endPoint.getY(), endPoint.getX()
+                startPoint.getX(), startPoint.getY(),
+                endPoint.getX(), endPoint.getY()
         );
 
         HttpHeaders headers = new HttpHeaders();
