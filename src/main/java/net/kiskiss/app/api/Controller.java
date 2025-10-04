@@ -13,6 +13,8 @@ public class Controller {
     @PostMapping("/api/route")
     public void getPoint(@RequestBody Data point){
         System.out.println(point.toString());
+        System.out.println(point.getPoint().getX());
+        System.out.println(point.getPoint().getY());
     }
 
 }
