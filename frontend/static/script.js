@@ -1131,6 +1131,12 @@ function showRouteSummary() {
     const loopType = routeData.loop ? '🔁 Зацикленный (вернуться к началу)' : '➡️ Линейный (закончить в другой точке)';
     const cityName = citiesData[routeData.city]?.name || 'Не выбран';
     
+    // Детальная информация о приоритетах для отладки
+    const prioritiesDebug = Object.entries(routeData.priorities)
+        .filter(([key]) => key !== 'speed')
+        .map(([key, data]) => `${data.name}: ${data.value}`)
+        .join(', ');
+    
     const summaryHTML = `
         <h4>📋 Ваш персонализированный маршрут</h4>
         <div class="route-summary-item">
@@ -1163,10 +1169,14 @@ function showRouteSummary() {
         <div class="priority-scale-info">
             <small>📝 Шкала: 0-не важно, 1-совсем не важно, 2-слабо важно, 3-средне важно, 4-очень важно, 5-критически важно</small>
         </div>
+        <div class="debug-info" style="margin-top: 10px; padding: 8px; background: #f0f0f0; border-radius: 5px; font-size: 0.8rem;">
+            <strong>Отладка:</strong> ${prioritiesDebug}
+        </div>
     `;
     
     document.getElementById('route-summary').innerHTML = summaryHTML;
 }
+
 
 // Построение маршрута на карте
 function buildRouteOnMap() {
@@ -1388,7 +1398,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-// Построение маршрута на карте (демо-режим)
+// // Построение маршрута на карте (демо-режим)
 // function buildRouteOnMap() {
 //     if (!map) return;
     
