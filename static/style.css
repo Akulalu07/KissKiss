@@ -1007,3 +1007,64 @@ body {
     align-items: center;
     gap: 10px;
 }
+/* Быстрые настройки маршрута */
+.quick-presets {
+    margin-top: 1.5rem;
+}
+
+.preset-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.btn-preset {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem 1rem;
+    background: white;
+    border: 2px solid var(--gray-light);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    height: 100%;
+}
+
+.btn-preset:hover {
+    border-color: var(--primary);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.preset-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.preset-desc {
+    font-size: 0.8rem;
+    color: var(--gray);
+    margin-top: 0.5rem;
+    line-height: 1.3;
+}
+
+.preset-description {
+    text-align: center;
+    color: var(--gray);
+    font-style: italic;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+    .preset-buttons {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+    
+    .btn-preset {
+        padding: 1.2rem 0.8rem;
+    }
+}
