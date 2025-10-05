@@ -5,7 +5,7 @@
 let map;
 let markers = [];
 let routePoints = []; // Массив для точек маршрута от сервера
-let routeLines = []; // Массив для линий маршрута
+// let routeLines = []; // Массив для линий маршрута
 const API_KEY = 'f416cc08-f627-4ac9-8709-aa1a86b0a7d4';
 const moscow = [37.6173, 55.7558];
 
@@ -46,11 +46,11 @@ function updateStatus(message, type = 'info') {
 
 // Функция изменения города
 function changeCity(cityId) {
-    console.log('🔄 Меняем город на:', cityId);
+    console.log(' Меняем город на:', cityId);
     
     const city = citiesData[cityId];
     if (!city) {
-        console.error('❌ Город не найден:', cityId);
+        console.error(' Город не найден:', cityId);
         return false;
     }
     
@@ -61,27 +61,27 @@ function changeCity(cityId) {
         lng: city.coordinates.lng 
     };
     
-    console.log('📌 Новые координаты:', routeData.coordinates);
+    console.log(' Новые координаты:', routeData.coordinates);
     
     // Обновляем поля ввода координат в карточке "Начало маршрута"
     const latInput = document.getElementById('latitude');
     const lngInput = document.getElementById('longitude');
     
-    console.log('🔍 Найдены поля ввода:', { latInput: !!latInput, lngInput: !!lngInput });
+    console.log(' Найдены поля ввода:', { latInput: !!latInput, lngInput: !!lngInput });
     
     if (latInput && lngInput) {
         latInput.value = city.coordinates.lat.toFixed(6);
         lngInput.value = city.coordinates.lng.toFixed(6);
-        console.log('✅ Поля ввода обновлены:', latInput.value, lngInput.value);
+        console.log(' Поля ввода обновлены:', latInput.value, lngInput.value);
     } else {
-        console.error('❌ Поля ввода координат не найдены!');
+        console.error(' Поля ввода координат не найдены!');
     }
     
     // Обновляем отображение координат в карточке выбора города
     const coordsDisplay = document.getElementById('city-coordinates-display');
     if (coordsDisplay) {
         coordsDisplay.textContent = `${city.coordinates.lat.toFixed(4)}, ${city.coordinates.lng.toFixed(4)}`;
-        console.log('✅ Отображение координат обновлено');
+        console.log(' Отображение координат обновлено');
     }
 
 
@@ -98,10 +98,10 @@ function changeCity(cityId) {
         // Очищаем старые маркеры и добавляем новый
         clearMarkers();
         addMarker(city.center);
-        console.log('✅ Карта обновлена');
+        console.log(' Карта обновлена');
     }
     
-    updateStatus(`🏙️ Город изменен на: ${city.name}. Координаты установлены в начало маршрута`, 'success');
+    updateStatus(` Город изменен на: ${city.name}. Координаты установлены в начало маршрута`, 'success');
     return true;
 }
 
@@ -122,7 +122,7 @@ function initCitySelect() {
     citySelect.value = routeData.city;
     changeCity(routeData.city);
     
-    console.log('✅ Выбор города инициализирован');
+    console.log(' Выбор города инициализирован');
 }
 
 // Инициализация карты
@@ -134,7 +134,7 @@ function initMap() {
             throw new Error('Библиотека карт 2GIS не загрузилась');
         }
 
-        console.log('🔑 Используем API ключ:', API_KEY);
+        console.log(' Используем API ключ:', API_KEY);
         
         map = new mapgl.Map('map-container', {
             center: moscow,
@@ -143,7 +143,7 @@ function initMap() {
         });
 
         map.on('load', () => {
-            console.log('✅ Карта 2GIS загружена');
+            console.log(' Карта 2GIS загружена');
             
             // ДОБАВЛЯЕМ ОБРАБОТЧИК КЛИКА ПО КАРТЕ
             map.on('click', function(event) {
@@ -154,12 +154,12 @@ function initMap() {
 
         // Обработчик ошибок карты
         map.on('error', (error) => {
-            console.error('❌ Ошибка карты 2GIS:', error);
+            console.error(' Ошибка карты 2GIS:', error);
         });
 
     } catch (error) {
-        console.error('💥 Ошибка инициализации:', error);
-        updateStatus('💥 Ошибка инициализации: ' + error.message, 'error');
+        console.error(' Ошибка инициализации:', error);
+        updateStatus(' Ошибка инициализации: ' + error.message, 'error');
     }
 }
 
@@ -167,11 +167,11 @@ function initMap() {
 // Функция для отображения точек маршрута на карте
 function displayRoutePoints(points) {
     if (!map) {
-        console.error('❌ Карта не инициализирована');
+        console.error(' Карта не инициализирована');
         return;
     }
     
-    console.log('🔄 Отображаем точки маршрута:', points);
+    console.log(' Отображаем точки маршрута:', points);
     
     // Очищаем предыдущие маркеры и линии
     clearRouteFromMap();
@@ -180,7 +180,7 @@ function displayRoutePoints(points) {
     routePoints = points;
     
     if (!points || points.length === 0) {
-        updateStatus('❌ Нет точек для отображения', 'error');
+        updateStatus(' Нет точек для отображения', 'error');
         return;
     }
     
@@ -198,20 +198,20 @@ function displayRoutePoints(points) {
             
             markers.push(marker);
             
-            console.log(`✅ Точка ${index + 1} добавлена:`, coordinates);
+            console.log(` Точка ${index + 1} добавлена:`, coordinates);
             
         } catch (error) {
-            console.error(`❌ Ошибка при создании маркера точки ${index + 1}:`, error);
+            console.error(` Ошибка при создании маркера точки ${index + 1}:`, error);
         }
     });
     
     // Создаем линии маршрута между точками
-    createRouteLines(points);
+    // createRouteLines(points);
     
     // Центрируем карту на маршруте
     centerMapOnRoute(points);
     
-    updateStatus(`✅ Маршрут отображен: ${points.length} точек`, 'success');
+    updateStatus(` Маршрут отображен: ${points.length} точек`, 'success');
 }
 
 // Функция для создания иконки с номером точки
@@ -243,24 +243,24 @@ function createRoutePointIcon(number) {
 }
 
 // Функция для создания линий между точками маршрута
-function createRouteLines(points) {
-    if (!map || points.length < 2) return;
+// function createRouteLines(points) {
+//     if (!map || points.length < 2) return;
     
-    try {
-        // Создаем полилинию через все точки
-        const polyline = new mapgl.Polyline(map, {
-            coordinates: points.map(point => [point.lng, point.lat]),
-            color: '#3498db',
-            width: 4
-        });
+//     try {
+//         // Создаем полилинию через все точки
+//         const polyline = new mapgl.Polyline(map, {
+//             coordinates: points.map(point => [point.lng, point.lat]),
+//             color: '#3498db',
+//             width: 4
+//         });
         
-        routeLines.push(polyline);
-        console.log('✅ Линия маршрута создана');
+//         routeLines.push(polyline);
+//         console.log(' Линия маршрута создана');
         
-    } catch (error) {
-        console.error('❌ Ошибка при создании линии маршрута:', error);
-    }
-}
+//     } catch (error) {
+//         console.error(' Ошибка при создании линии маршрута:', error);
+//     }
+// }
 
 // Функция для центрирования карты на маршруте
 function centerMapOnRoute(points) {
@@ -293,7 +293,7 @@ function centerMapOnRoute(points) {
     map.setCenter([centerLng, centerLat]);
     map.setZoom(zoom);
     
-    console.log('✅ Карта центрирована на маршруте');
+    console.log(' Карта центрирована на маршруте');
 }
 
 // Функция для очистки маршрута с карты
@@ -311,14 +311,14 @@ function clearRouteFromMap() {
     markers = [];
     
     // Очищаем линии маршрута
-    routeLines.forEach(line => {
-        try {
-            line.destroy();
-        } catch (error) {
-            console.log('Ошибка при удалении линии:', error);
-        }
-    });
-    routeLines = [];
+    // routeLines.forEach(line => {
+    //     try {
+    //         line.destroy();
+    //     } catch (error) {
+    //         console.log('Ошибка при удалении линии:', error);
+    //     }
+    // });
+    // routeLines = [];
     
     routePoints = [];
 }
@@ -333,7 +333,7 @@ function clearRouteFromMap() {
 
 // Функция обработки ответа от сервера
 function handleServerResponse(serverResponse) {
-    console.log('🔄 Обрабатываем ответ сервера:', serverResponse);
+    console.log(' Обрабатываем ответ сервера:', serverResponse);
     
     // Показываем сводку с данными, которые отправили
     showRouteSummary();
@@ -349,7 +349,7 @@ function handleServerResponse(serverResponse) {
 // Функция для обработки точек маршрута от сервера
 function processRoutePointsFromServer(serverResponse) {
     if (serverResponse.points && Array.isArray(serverResponse.points)) {
-        console.log('📍 Получены точки маршрута от сервера:', serverResponse.points);
+        console.log(' Получены точки маршрута от сервера:', serverResponse.points);
         
         // Преобразуем точки в нужный формат
         const routePoints = serverResponse.points.map(point => {
@@ -375,7 +375,7 @@ function processRoutePointsFromServer(serverResponse) {
         }
         
     } else {
-        console.log('📍 Точки маршрута не получены, строим демо-маршрут');
+        console.log(' Точки маршрута не получены, строим демо-маршрут');
         // Строим демо-маршрут вокруг начальной точки
         buildRouteOnMap();
     }
@@ -391,22 +391,22 @@ function processRoutePointsFromServer(serverResponse) {
 // Улучшенная функция добавления маркера
 function addMarker(coordinates = null) {
     if (!map) {
-        console.error('❌ Карта не инициализирована');
+        console.error(' Карта не инициализирована');
         return null;
     }
     
     try {
-        console.log('🔄 Пытаемся добавить маркер 2GIS с координатами:', coordinates);
+        console.log(' Пытаемся добавить маркер 2GIS с координатами:', coordinates);
         
         const marker = new mapgl.Marker(map, {
             coordinates: coordinates
         });
         
         markers.push(marker);
-        console.log('✅ Маркер 2GIS успешно добавлен');
+        console.log(' Маркер 2GIS успешно добавлен');
         return marker;
     } catch (error) {
-        console.error('❌ Ошибка добавления маркера 2GIS:', error);
+        console.error(' Ошибка добавления маркера 2GIS:', error);
         createAlternativeMarker(coordinates);
         return null;
     }
@@ -414,7 +414,7 @@ function addMarker(coordinates = null) {
 
 // Функция создания альтернативного маркера
 function createAlternativeMarker(coordinates) {
-    console.log('🔄 Создаем альтернативный маркер');
+    console.log(' Создаем альтернативный маркер');
     const [lng, lat] = coordinates;
     
     const mapContainer = document.getElementById('map-container');
@@ -435,12 +435,12 @@ function createAlternativeMarker(coordinates) {
     mapContainer.style.position = 'relative';
     mapContainer.appendChild(marker);
     
-    console.log('✅ Альтернативный маркер создан');
+    console.log(' Альтернативный маркер создан');
 }
 
 // Функция установки начальной точки с карты
 function setStartPointFromMap(coordinates) {
-    console.log('📍 Устанавливаем точку с координатами:', coordinates);
+    console.log(' Устанавливаем точку с координатами:', coordinates);
     const [lng, lat] = coordinates;
     
     // Сохраняем координаты
@@ -452,7 +452,7 @@ function setStartPointFromMap(coordinates) {
     if (latInput && lngInput) {
         latInput.value = lat.toFixed(6);
         lngInput.value = lng.toFixed(6);
-        console.log('✅ Поля ввода обновлены');
+        console.log(' Поля ввода обновлены');
     }
     
     // Меняем город на "Другой город" при ручном выборе точки на карте
@@ -475,12 +475,12 @@ function setStartPointFromMap(coordinates) {
         map.setZoom(15);
     }
     
-    updateStatus(`📍 Начальная точка установлена: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
+    updateStatus(` Начальная точка установлена: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
 }
 
 // Функция очистки маркеров
 function clearMarkers() {
-    console.log('🗑️ Очищаем маркеры');
+    console.log(' Очищаем маркеры');
     
     // Очищаем маркеры 2GIS
     markers.forEach(marker => {
@@ -507,7 +507,7 @@ function setCoordinatesFromInput() {
     const lngInput = document.getElementById('longitude');
     
     if (!latInput || !lngInput) {
-        updateStatus('❌ Поля координат не найдены', 'error');
+        updateStatus(' Поля координат не найдены', 'error');
         return false;
     }
 
@@ -516,17 +516,17 @@ function setCoordinatesFromInput() {
     
     // Валидация координат
     if (isNaN(lat) || isNaN(lng)) {
-        updateStatus('❌ Введите числа в поля координат', 'error');
+        updateStatus(' Введите числа в поля координат', 'error');
         return false;
     }
 
     if (lat < -90 || lat > 90) {
-        updateStatus('❌ Широта должна быть от -90 до 90', 'error');
+        updateStatus(' Широта должна быть от -90 до 90', 'error');
         return false;
     }
 
     if (lng < -180 || lng > 180) {
-        updateStatus('❌ Долгота должна быть от -180 до 180', 'error');
+        updateStatus(' Долгота должна быть от -180 до 180', 'error');
         return false;
     }
 
@@ -560,7 +560,7 @@ function setCoordinatesFromInput() {
         map.setZoom(15);
     }
 
-    updateStatus(`✅ Координаты установлены: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
+    updateStatus(` Координаты установлены: ${lat.toFixed(6)}, ${lng.toFixed(6)}`, 'success');
     return true;
 }
 
@@ -571,7 +571,7 @@ function setTimeFromInput() {
     const minutesInput = document.getElementById('minutes');
     
     if (!hoursInput || !minutesInput) {
-        updateStatus('❌ Поля времени не найдены', 'error');
+        updateStatus(' Поля времени не найдены', 'error');
         return false;
     }
 
@@ -580,29 +580,29 @@ function setTimeFromInput() {
     
     // Валидация времени
     if (isNaN(hours) || isNaN(minutes)) {
-        updateStatus('❌ Введите числа в поля времени', 'error');
+        updateStatus(' Введите числа в поля времени', 'error');
         return false;
     }
 
     if (hours < 0 || hours > 4) { // Изменено с 23 на 4
-        updateStatus('❌ Часы должны быть от 0 до 4', 'error');
+        updateStatus(' Часы должны быть от 0 до 4', 'error');
         return false;
     }
 
     if (minutes < 0 || minutes > 59) {
-        updateStatus('❌ Минуты должны быть от 0 до 59', 'error');
+        updateStatus(' Минуты должны быть от 0 до 59', 'error');
         return false;
     }
 
     if (hours === 0 && minutes === 0) {
-        updateStatus('❌ Время маршрута не может быть 0', 'error');
+        updateStatus(' Время маршрута не может быть 0', 'error');
         return false;
     }
 
     // Проверка общего времени (не более 4 часов)
     const totalMinutes = hours * 60 + minutes;
     if (totalMinutes > 240) { // 4 часа = 240 минут
-        updateStatus('❌ Общее время маршрута не может превышать 4 часа', 'error');
+        updateStatus(' Общее время маршрута не может превышать 4 часа', 'error');
         return false;
     }
 
@@ -612,7 +612,7 @@ function setTimeFromInput() {
     // Обновляем отображение
     updateTimeDisplay();
     
-    updateStatus(`✅ Время установлено: ${hours}ч ${minutes}мин`, 'success');
+    updateStatus(` Время установлено: ${hours}ч ${minutes}мин`, 'success');
     return true;
 }
 
@@ -635,7 +635,7 @@ function setPrioritiesFromInput() {
         
         // Валидация приоритета (1-5 для обычных, 0-5 для скорости)
         if (isNaN(value)) {
-            updateStatus(`❌ Приоритет "${routeData.priorities[priority].name}" должен быть числом`, 'error');
+            updateStatus(` Приоритет "${routeData.priorities[priority].name}" должен быть числом`, 'error');
             hasErrors = true;
             return;
         }
@@ -643,14 +643,14 @@ function setPrioritiesFromInput() {
         if (priority !== 'speed') {
             // Для обычных приоритетов: 1-5
             if (value < 1 || value > 5) {
-                updateStatus(`❌ Приоритет "${routeData.priorities[priority].name}" должен быть от 1 до 5`, 'error');
+                updateStatus(` Приоритет "${routeData.priorities[priority].name}" должен быть от 1 до 5`, 'error');
                 hasErrors = true;
                 return;
             }
         } else {
             // Для скорости: 0-5
             if (value < 0 || value > 5) {
-                updateStatus(`❌ Приоритет "${routeData.priorities[priority].name}" должен быть от 0 до 5`, 'error');
+                updateStatus(` Приоритет "${routeData.priorities[priority].name}" должен быть от 0 до 5`, 'error');
                 hasErrors = true;
                 return;
             }
@@ -658,7 +658,7 @@ function setPrioritiesFromInput() {
 
         // Проверка уникальности ненулевых значений (кроме скорости)
         if (priority !== 'speed' && usedValues.has(value)) {
-            updateStatus(`❌ Приоритет "${value}" уже используется. Все приоритеты должны быть уникальными!`, 'error');
+            updateStatus(` Приоритет "${value}" уже используется. Все приоритеты должны быть уникальными!`, 'error');
             hasErrors = true;
             return;
         }
@@ -678,26 +678,26 @@ function setPrioritiesFromInput() {
         return false;
     }
 
-    updateStatus('✅ Все приоритеты установлены (уникальные значения от 1 до 5)', 'success');
+    updateStatus(' Все приоритеты установлены (уникальные значения от 1 до 5)', 'success');
     return true;
 }
 
 // 4. Установка типа маршрута (зацикленный/линейный)
-function setLoopFromInput() {
-    const loopYes = document.querySelector('input[name="loop-route"][value="yes"]');
-    const loopNo = document.querySelector('input[name="loop-route"][value="no"]');
+// function setLoopFromInput() {
+//     const loopYes = document.querySelector('input[name="loop-route"][value="yes"]');
+//     const loopNo = document.querySelector('input[name="loop-route"][value="no"]');
     
-    if (!loopYes || !loopNo) {
-        console.error('Радио-кнопки зацикленного маршрута не найдены');
-        return false;
-    }
+//     if (!loopYes || !loopNo) {
+//         console.error('Радио-кнопки зацикленного маршрута не найдены');
+//         return false;
+//     }
     
-    routeData.loop = loopYes.checked;
+//     routeData.loop = loopYes.checked;
     
-    const loopType = routeData.loop ? 'зацикленный' : 'линейный';
-    updateStatus(`✅ Тип маршрута установлен: ${loopType}`, 'success');
-    return true;
-}
+//     const loopType = routeData.loop ? 'зацикленный' : 'линейный';
+//     updateStatus(` Тип маршрута установлен: ${loopType}`, 'success');
+//     return true;
+// }
 
 // Обновление отображения ползунка
 function updateSliderDisplay(priority, value) {
@@ -796,7 +796,7 @@ function getRussianEnding(number, endings) {
 // ===== ОСНОВНАЯ ФУНКЦИЯ ПОСТРОЕНИЯ МАРШРУТА =====
 
 function buildRoute() {
-    console.log('🚀 Начинаем построение маршрута...', routeData);
+    console.log(' Начинаем построение маршрута...', routeData);
     
     // Проверяем все данные
     if (!validateAllData()) {
@@ -804,10 +804,10 @@ function buildRoute() {
     }
     
     // Устанавливаем тип маршрута
-    if (!setLoopFromInput()) {
-        updateStatus('❌ Ошибка при установке типа маршрута', 'error');
-        return;
-    }
+    // if (!setLoopFromInput()) {
+    //     updateStatus(' Ошибка при установке типа маршрута', 'error');
+    //     return;
+    // }
     
     // Дополнительная проверка уникальности приоритетов
     if (!validatePriorityUniqueness()) {
@@ -845,9 +845,9 @@ function sendRouteDataToServer() {
         loop: routeData.loop
     };
     
-    console.log('📤 Отправляем данные:', serverData);
-    console.log('🏙️ Город:', routeData.city);
-    console.log('🚶 Скорость преобразована:', routeData.priorities.speed.value, '→', speedValue, 'км/ч');
+    console.log(' Отправляем данные:', serverData);
+    console.log(' Город:', routeData.city);
+    console.log(' Скорость преобразована:', routeData.priorities.speed.value, '→', speedValue, 'км/ч');
     
     // Пробуем разные подходы
     attemptServerRequest(serverData);
@@ -909,8 +909,8 @@ function attemptServerRequest(serverData) {
 function tryAttempts(attempts, index, serverData) {
     if (index >= attempts.length) {
         // Все попытки провалились
-        console.log('🎭 Переходим в демо-режим');
-        updateStatus('🔶 Демо-режим: данные сохранены локально', 'info');
+        console.log(' Переходим в демо-режим');
+        updateStatus(' Демо-режим: данные сохранены локально', 'info');
         
         // Сохраняем данные локально для демо
         saveLocalRouteData(serverData);
@@ -928,8 +928,8 @@ function tryAttempts(attempts, index, serverData) {
     .then(response => {
         if (attempt.options.mode === 'no-cors') {
             // В режиме no-cors мы не можем прочитать ответ, но запрос отправлен
-            console.log('✅ Запрос отправлен (no-cors mode)');
-            updateStatus('✅ Данные отправлены (режим no-cors)', 'success');
+            console.log(' Запрос отправлен (no-cors mode)');
+            updateStatus(' Данные отправлены (режим no-cors)', 'success');
             handleServerResponse({message: "Данные получены сервером (no-cors режим)"});
             return;
         }
@@ -941,13 +941,13 @@ function tryAttempts(attempts, index, serverData) {
     })
     .then(data => {
         if (data) {
-            console.log('✅ Сервер ответил:', data);
-            updateStatus('✅ Данные успешно отправлены!', 'success');
+            console.log(' Сервер ответил:', data);
+            updateStatus(' Данные успешно отправлены!', 'success');
             handleServerResponse(data);
         }
     })
     .catch(error => {
-        console.log(`❌ ${attempt.name} failed:`, error.message);
+        console.log(` ${attempt.name} failed:`, error.message);
         
         // Пробуем следующую попытку
         setTimeout(() => {
@@ -973,14 +973,14 @@ function saveLocalRouteData(serverData) {
     // Сохраняем в глобальной переменной для использования в generateRoutePoints
     window.lastRouteData = serverData;
     
-    console.log('💾 Данные сохранены локально:', serverData);
-    console.log('🚶 Скорость сохранена:', serverData.speedDebug);
+    console.log(' Данные сохранены локально:', serverData);
+    console.log(' Скорость сохранена:', serverData.speedDebug);
 }
 
 // Функция обработки ответа от сервера
 // Функция обработки ответа от сервера
 function handleServerResponse(serverResponse) {
-    console.log('🔄 Обрабатываем ответ сервера:', serverResponse);
+    console.log(' Обрабатываем ответ сервера:', serverResponse);
     
     // Показываем сводку с данными, которые отправили
     showRouteSummary();
@@ -996,9 +996,9 @@ function handleServerResponse(serverResponse) {
 function processRoutePointsFromServer(serverResponse) {
     
     if (serverResponse.points && Array.isArray(serverResponse.points)) {
-        console.log('📍 Сырые данные от сервера:', serverResponse.points);
-        console.log('📍 Первая точка (сырая):', serverResponse.points[0]);
-        console.log('📍 Получены точки маршрута от сервера:', serverResponse.points);
+        console.log(' Сырые данные от сервера:', serverResponse.points);
+        console.log(' Первая точка (сырая):', serverResponse.points[0]);
+        console.log(' Получены точки маршрута от сервера:', serverResponse.points);
         
         // Преобразуем точки в нужный формат
         const routePoints = serverResponse.points.map(point => {
@@ -1012,8 +1012,8 @@ function processRoutePointsFromServer(serverResponse) {
             }
             return null;
         }).filter(point => point !== null);
-        console.log('📍 Преобразованные точки:', routePoints);
-        console.log('📍 Первая точка (преобразованная):', routePoints[0]);
+        console.log(' Преобразованные точки:', routePoints);
+        console.log(' Первая точка (преобразованная):', routePoints[0]);
         if (routePoints.length > 0) {
             // Отображаем точки на карте
             displayRoutePoints(routePoints);
@@ -1023,7 +1023,7 @@ function processRoutePointsFromServer(serverResponse) {
         }
         
     } else {
-        console.log('📍 Точки маршрута не получены, строим демо-маршрут');
+        console.log(' Точки маршрута не получены, строим демо-маршрут');
         // Строим демо-маршрут вокруг начальной точки
         buildRouteOnMap();
     }
@@ -1040,7 +1040,7 @@ function showServerResponseSummary(serverResponse) {
     if (serverResponse.points && Array.isArray(serverResponse.points)) {
         pointsInfo = `
             <div class="points-details" style="margin-top: 15px; padding: 10px; background: #e8f4fd; border-radius: 8px;">
-                <h5>📍 Детали маршрута:</h5>
+                <h5> Детали маршрута:</h5>
                 <div style="font-size: 0.9rem;">
                     <strong>Количество точек:</strong> ${serverResponse.points.length}<br>
                     <strong>Протяженность:</strong> ${serverResponse.distance ? serverResponse.distance + ' км' : 'расчет...'}<br>
@@ -1053,9 +1053,9 @@ function showServerResponseSummary(serverResponse) {
     if (serverResponse.message) {
         serverInfoHTML = `
             <div class="server-response" style="margin-top: 20px; padding: 15px; background: #e8f5e8; border-radius: 10px; border-left: 5px solid #4CAF50;">
-                <h4>📡 Ответ сервера:</h4>
+                <h4> Ответ сервера:</h4>
                 <div class="server-message" style="font-weight: bold; color: #2e7d32;">${serverResponse.message}</div>
-                ${serverResponse.route ? '<div class="route-info">✅ Маршрут получен от сервера</div>' : ''}
+                ${serverResponse.route ? '<div class="route-info"> Маршрут получен от сервера</div>' : ''}
                 ${pointsInfo}
             </div>
         `;
@@ -1071,13 +1071,13 @@ function showServerResponseSummary(serverResponse) {
 function validateAllData() {
     // Проверяем координаты
     if (!routeData.coordinates || !routeData.coordinates.lat || !routeData.coordinates.lng) {
-        updateStatus('❌ Сначала установите координаты начала маршрута', 'error');
+        updateStatus(' Сначала установите координаты начала маршрута', 'error');
         return false;
     }
     
     // Проверяем время
     if (routeData.time.hours === 0 && routeData.time.minutes === 0) {
-        updateStatus('❌ Установите время маршрута', 'error');
+        updateStatus(' Установите время маршрута', 'error');
         return false;
     }
     
@@ -1087,7 +1087,7 @@ function validateAllData() {
     
     for (let [key, priority] of priorities) {
         if (priority.value < 1 || priority.value > 5) {
-            updateStatus(`❌ Приоритет "${priority.name}" должен быть от 1 до 5`, 'error');
+            updateStatus(` Приоритет "${priority.name}" должен быть от 1 до 5`, 'error');
             return false;
         }
     }
@@ -1103,7 +1103,7 @@ function validatePriorityUniqueness() {
     
     for (let [_, priority] of priorities) {
         if (usedValues.has(priority.value)) {
-            updateStatus(`❌ Ошибка: приоритет "${priority.value}" используется несколько раз. Все приоритеты должны быть уникальными!`, 'error');
+            updateStatus(` Ошибка: приоритет "${priority.value}" используется несколько раз. Все приоритеты должны быть уникальными!`, 'error');
             return false;
         }
         usedValues.add(priority.value);
@@ -1128,45 +1128,55 @@ function showRouteSummary() {
     const speedValue = routeData.priorities.speed.value;
     const speedKmph = convertSpeedToKmph(speedValue);
     const speedDescription = getSpeedDescription(speedValue);
-    const loopType = routeData.loop ? '🔁 Зацикленный (вернуться к началу)' : '➡️ Линейный (закончить в другой точке)';
+    const loopType = routeData.loop ? ' Зацикленный (вернуться к началу)' : ' Линейный (закончить в другой точке)';
     const cityName = citiesData[routeData.city]?.name || 'Не выбран';
     
+    // Детальная информация о приоритетах для отладки
+    const prioritiesDebug = Object.entries(routeData.priorities)
+        .filter(([key]) => key !== 'speed')
+        .map(([key, data]) => `${data.name}: ${data.value}`)
+        .join(', ');
+    
     const summaryHTML = `
-        <h4>📋 Ваш персонализированный маршрут</h4>
+        <h4> Ваш персонализированный маршрут</h4>
         <div class="route-summary-item">
-            <strong>🏙️ Город:</strong> ${cityName}
+            <strong> Город:</strong> ${cityName}
         </div>
         <div class="route-summary-item">
-            <strong>📍 Начальная точка:</strong><br>
+            <strong> Начальная точка:</strong><br>
             Широта: ${routeData.coordinates.lat.toFixed(6)}<br>
             Долгота: ${routeData.coordinates.lng.toFixed(6)}
         </div>
         <div class="route-summary-item">
-            <strong>⏰ Продолжительность:</strong> ${routeData.time.hours}ч ${routeData.time.minutes}мин
+            <strong> Продолжительность:</strong> ${routeData.time.hours}ч ${routeData.time.minutes}мин
         </div>
         <div class="route-summary-item">
-            <strong>🚶 Скорость маршрута:</strong> ${speedValue} - ${speedDescription}
+            <strong> Скорость маршрута:</strong> ${speedValue} - ${speedDescription}
         </div>
         <div class="route-summary-item">
-            <strong>📏 Расчетная скорость:</strong> ${speedKmph} км/ч
+            <strong> Расчетная скорость:</strong> ${speedKmph} км/ч
         </div>
         <div class="route-summary-item">
-            <strong>🔄 Тип маршрута:</strong> ${loopType}
+            <strong> Тип маршрута:</strong> ${loopType}
         </div>
         <div class="route-summary-item">
-            <strong>🎯 Главный приоритет:</strong> ${mainPriority}
+            <strong> Главный приоритет:</strong> ${mainPriority}
         </div>
         <div class="route-summary-item">
-            <strong>📊 Шкала важности:</strong><br>
+            <strong> Шкала важности:</strong><br>
             ${activePriorities.length > 0 ? activePriorities.join('<br>') : 'Приоритеты не установлены'}
         </div>
         <div class="priority-scale-info">
-            <small>📝 Шкала: 0-не важно, 1-совсем не важно, 2-слабо важно, 3-средне важно, 4-очень важно, 5-критически важно</small>
+            <small> Шкала: 0-не важно, 1-совсем не важно, 2-слабо важно, 3-средне важно, 4-очень важно, 5-критически важно</small>
+        </div>
+        <div class="debug-info" style="margin-top: 10px; padding: 8px; background: #f0f0f0; border-radius: 5px; font-size: 0.8rem;">
+            <strong>Отладка:</strong> ${prioritiesDebug}
         </div>
     `;
     
     document.getElementById('route-summary').innerHTML = summaryHTML;
 }
+
 
 // Построение маршрута на карте
 function buildRouteOnMap() {
@@ -1196,7 +1206,7 @@ function resetMap() {
         markers = [];
         map.setCenter(moscow);
         map.setZoom(13);
-        updateStatus('🗑️ Карта очищена!', 'success');
+        updateStatus(' Карта очищена!', 'success');
     }
 }
 
@@ -1204,14 +1214,14 @@ function resetMap() {
 function zoomOutMap() {
     if (map) {
         map.setZoom(11);
-        updateStatus('🔍 Карта отдалена', 'success');
+        updateStatus(' Карта отдалена', 'success');
     }
 }
 
 // ===== ИНИЦИАЛИЗАЦИЯ =====
 
 function initRouteSection() {
-    console.log('🚀 Инициализация секции маршрута...');
+    console.log(' Инициализация секции маршрута...');
     
     // Инициализация выбора города (ДОБАВЬТЕ ЭТУ СТРОКУ ПЕРВОЙ)
     initCitySelect();
@@ -1228,9 +1238,9 @@ function initRouteSection() {
     initTimeControls();
     
     // Обработчики для зацикленного маршрута
-    initLoopControls();
+    // initLoopControls();
     
-    console.log('✅ Секция маршрута инициализирована');
+    console.log(' Секция маршрута инициализирована');
 }
 
 // Инициализация ползунков приоритетов
@@ -1342,21 +1352,21 @@ function initTimeControls() {
 }
 
 // Инициализация управления зацикленным маршрутом
-function initLoopControls() {
-    const loopRadios = document.querySelectorAll('input[name="loop-route"]');
+// function initLoopControls() {
+//     const loopRadios = document.querySelectorAll('input[name="loop-route"]');
     
-    loopRadios.forEach(radio => {
-        radio.addEventListener('change', function() {
-            if (this.checked) {
-                const loopType = this.value === 'yes' ? 'зацикленный' : 'линейный';
-                console.log(`🔄 Тип маршрута изменен на: ${loopType}`);
-            }
-        });
-    });
+//     loopRadios.forEach(radio => {
+//         radio.addEventListener('change', function() {
+//             if (this.checked) {
+//                 const loopType = this.value === 'yes' ? 'зацикленный' : 'линейный';
+//                 console.log(`🔄 Тип маршрута изменен на: ${loopType}`);
+//             }
+//         });
+//     });
     
-    // Устанавливаем значение по умолчанию
-    document.querySelector('input[name="loop-route"][value="yes"]').checked = true;
-}
+//     // Устанавливаем значение по умолчанию
+//     document.querySelector('input[name="loop-route"][value="yes"]').checked = true;
+// }
 
 // Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
@@ -1364,10 +1374,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Проверка что citiesData загружен
     if (typeof citiesData === 'undefined') {
-        console.error('❌ cities.js не загружен!');
-        updateStatus('❌ Ошибка: файл с городами не загружен', 'error');
+        console.error(' cities.js не загружен!');
+        updateStatus(' Ошибка: файл с городами не загружен', 'error');
     } else {
-        console.log('✅ cities.js загружен, городов:', Object.keys(citiesData).length);
+        console.log(' cities.js загружен, городов:', Object.keys(citiesData).length);
     }
     
     initMap();
@@ -1384,7 +1394,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    console.log('✅ Приложение инициализировано!');
+    console.log(' Приложение инициализировано!');
 });
 
 
