@@ -995,11 +995,11 @@ function processRoutePointsFromServer(serverResponse) {
         const routePoints = serverResponse.points.map(point => {
             // Предполагаем, что сервер присылает точки в формате {lat, lng} или {x, y}
             if (point.lat !== undefined && point.lng !== undefined) {
-                return { lat: point.lat, lng: point.lng };
+                return { lat: point.lng , lng: point.lat };
             } else if (point.x !== undefined && point.y !== undefined) {
-                return { lat: point.y, lng: point.x }; // Если сервер использует x,y
+                return { lat: point.x , lng: point.y}; // Если сервер использует x,y
             } else if (point[0] !== undefined && point[1] !== undefined) {
-                return { lat: point[1], lng: point[0] }; // Если массив [lng, lat]
+                return { lat: point[0], lng: point[1] }; // Если массив [lng, lat]
             }
             return null;
         }).filter(point => point !== null);
