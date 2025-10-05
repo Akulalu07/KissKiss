@@ -5,7 +5,7 @@
 let map;
 let markers = [];
 let routePoints = []; // Массив для точек маршрута от сервера
-let routeLines = []; // Массив для линий маршрута
+// let routeLines = []; // Массив для линий маршрута
 const API_KEY = 'f416cc08-f627-4ac9-8709-aa1a86b0a7d4';
 const moscow = [37.6173, 55.7558];
 
@@ -206,7 +206,7 @@ function displayRoutePoints(points) {
     });
     
     // Создаем линии маршрута между точками
-    createRouteLines(points);
+    // createRouteLines(points);
     
     // Центрируем карту на маршруте
     centerMapOnRoute(points);
@@ -243,24 +243,24 @@ function createRoutePointIcon(number) {
 }
 
 // Функция для создания линий между точками маршрута
-function createRouteLines(points) {
-    if (!map || points.length < 2) return;
+// function createRouteLines(points) {
+//     if (!map || points.length < 2) return;
     
-    try {
-        // Создаем полилинию через все точки
-        const polyline = new mapgl.Polyline(map, {
-            coordinates: points.map(point => [point.lng, point.lat]),
-            color: '#3498db',
-            width: 4
-        });
+//     try {
+//         // Создаем полилинию через все точки
+//         const polyline = new mapgl.Polyline(map, {
+//             coordinates: points.map(point => [point.lng, point.lat]),
+//             color: '#3498db',
+//             width: 4
+//         });
         
-        routeLines.push(polyline);
-        console.log('✅ Линия маршрута создана');
+//         routeLines.push(polyline);
+//         console.log('✅ Линия маршрута создана');
         
-    } catch (error) {
-        console.error('❌ Ошибка при создании линии маршрута:', error);
-    }
-}
+//     } catch (error) {
+//         console.error('❌ Ошибка при создании линии маршрута:', error);
+//     }
+// }
 
 // Функция для центрирования карты на маршруте
 function centerMapOnRoute(points) {
@@ -311,14 +311,14 @@ function clearRouteFromMap() {
     markers = [];
     
     // Очищаем линии маршрута
-    routeLines.forEach(line => {
-        try {
-            line.destroy();
-        } catch (error) {
-            console.log('Ошибка при удалении линии:', error);
-        }
-    });
-    routeLines = [];
+    // routeLines.forEach(line => {
+    //     try {
+    //         line.destroy();
+    //     } catch (error) {
+    //         console.log('Ошибка при удалении линии:', error);
+    //     }
+    // });
+    // routeLines = [];
     
     routePoints = [];
 }
@@ -1388,29 +1388,29 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-// // Построение маршрута на карте (демо-режим)
-// function buildRouteOnMap() {
-//     if (!map) return;
+// Построение маршрута на карте (демо-режим)
+function buildRouteOnMap() {
+    if (!map) return;
     
-//     console.log('🎭 Строим демо-маршрут');
+    console.log('🎭 Строим демо-маршрут');
     
-//     // Очищаем старые маркеры
-//     clearRouteFromMap();
+    // Очищаем старые маркеры
+    clearRouteFromMap();
     
-//     const baseLng = routeData.coordinates.lng;
-//     const baseLat = routeData.coordinates.lat;
-//     // Создаем демо-точки маршрута вокруг начальной точки
-//     const demoPoints = [
-//         { lat: baseLat, lng: baseLng }, // Начальная точка
-//         { lat: baseLat + 0.005, lng: baseLng + 0.005 },
-//         { lat: baseLat + 0.008, lng: baseLng - 0.003 },
-//         { lat: baseLat + 0.003, lng: baseLng - 0.008 },
-//         { lat: baseLat - 0.004, lng: baseLng - 0.005 },
-//         { lat: baseLat - 0.006, lng: baseLng + 0.002 }
-//     ];
+    const baseLng = routeData.coordinates.lng;
+    const baseLat = routeData.coordinates.lat;
+    // Создаем демо-точки маршрута вокруг начальной точки
+    const demoPoints = [
+        { lat: baseLat, lng: baseLng }, // Начальная точка
+        { lat: baseLat + 0.005, lng: baseLng + 0.005 },
+        { lat: baseLat + 0.008, lng: baseLng - 0.003 },
+        { lat: baseLat + 0.003, lng: baseLng - 0.008 },
+        { lat: baseLat - 0.004, lng: baseLng - 0.005 },
+        { lat: baseLat - 0.006, lng: baseLng + 0.002 }
+    ];
     
-//     // Отображаем демо-точки
-//     displayRoutePoints(demoPoints);
+    // Отображаем демо-точки
+    displayRoutePoints(demoPoints);
     
-//     updateStatus('🎭 Демо-режим: маршрут построен с тестовыми точками', 'info');
-// }
+    updateStatus('🎭 Демо-режим: маршрут построен с тестовыми точками', 'info');
+}
