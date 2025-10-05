@@ -9,6 +9,15 @@ let routeLines = []; // Массив для линий маршрута
 const API_KEY = 'f416cc08-f627-4ac9-8709-aa1a86b0a7d4';
 const moscow = [37.6173, 55.7558];
 
+// Глобальные настройки сервера
+const SERVER_CONFIG = {
+    baseURL: 'http://127.0.0.1:8080',
+    apiRoute: '/api/route',
+    get fullRouteURL() {
+        return this.baseURL + this.apiRoute;
+    }
+};
+
 // Данные маршрута
 let routeData = {
     city: "moscow",
@@ -866,7 +875,7 @@ function attemptServerRequest(serverData) {
     const attempts = [
         {
             name: 'Прямое соединение',
-            url: 'http://127.0.0.1:8080/api/route',
+            url: SERVER_CONFIG.fullRouteURL, // ← ИСПОЛЬЗУЕМ ГЛОБАЛЬНУЮ ПЕРЕМЕННУЮ
             options: {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -884,7 +893,7 @@ function attemptServerRequest(serverData) {
         },
         {
             name: 'Без CORS',
-            url: 'http://127.0.0.1:8080/api/route',
+            url: SERVER_CONFIG.fullRouteURL, // ← ИСПОЛЬЗУЕМ ГЛОБАЛЬНУЮ ПЕРЕМЕННУЮ
             options: {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
