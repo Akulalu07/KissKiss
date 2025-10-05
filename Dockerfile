@@ -1,18 +1,19 @@
 # Stage 1
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+FROM golang:1.24.6-alpine AS builder
 WORKDIR /app
 
-COPY pom.xml .
-COPY mvnw .
-COPY .mvn .mvn
-COPY src src
+COPY go.mod .
+RUN go mod tidy
 
-RUN chmod +x mvnw && ./mvnw clean package -DskipTests
+COPY . .
+
+RUN go build -o app 
 
 # Stage 2
-FROM eclipse-temurin:17-jdk-jammy
+FROM alpine:3.19
 WORKDIR /app
+COPY --from=builder /app/app .
+COPY static ./static
 
-COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["./app"]

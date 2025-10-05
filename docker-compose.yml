@@ -1,23 +1,9 @@
 services:
   backend:
     build: .
-    container_name: kisskis-backend
-    environment:
-      - API-KEY=e50d3992-8076-47d8-bc3c-9add5a142f20
+    container_name: kisskiss
     ports:
       - "8080:8080"
-    networks:
-      - appnet
-
-  frontend:
-    build: ./frontend
-    container_name: kisskis-frontend
-    ports:
-      - "8081:8081"
-    depends_on:
-      - backend
-    environment:
-      BACKEND_URL: http://backend:8080
     networks:
       - appnet
 
