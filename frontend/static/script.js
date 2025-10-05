@@ -178,7 +178,7 @@ function displayRoutePoints(points) {
     // Создаем маркеры для каждой точки
     points.forEach((point, index) => {
         try {
-            const coordinates = [point.lng, point.lat];
+            const coordinates = [point.lat, point.lng];
             
             // Создаем маркер
             const marker = new mapgl.Marker(map, {
@@ -313,6 +313,11 @@ function clearRouteFromMap() {
     
     routePoints = [];
 }
+
+
+
+
+
 
 
 
@@ -1367,3 +1372,29 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
+// // Построение маршрута на карте (демо-режим)
+// function buildRouteOnMap() {
+//     if (!map) return;
+    
+//     console.log('🎭 Строим демо-маршрут');
+    
+//     // Очищаем старые маркеры
+//     clearRouteFromMap();
+    
+//     const baseLng = routeData.coordinates.lng;
+//     const baseLat = routeData.coordinates.lat;
+//     // Создаем демо-точки маршрута вокруг начальной точки
+//     const demoPoints = [
+//         { lat: baseLat, lng: baseLng }, // Начальная точка
+//         { lat: baseLat + 0.005, lng: baseLng + 0.005 },
+//         { lat: baseLat + 0.008, lng: baseLng - 0.003 },
+//         { lat: baseLat + 0.003, lng: baseLng - 0.008 },
+//         { lat: baseLat - 0.004, lng: baseLng - 0.005 },
+//         { lat: baseLat - 0.006, lng: baseLng + 0.002 }
+//     ];
+    
+//     // Отображаем демо-точки
+//     displayRoutePoints(demoPoints);
+    
+//     updateStatus('🎭 Демо-режим: маршрут построен с тестовыми точками', 'info');
+// }
