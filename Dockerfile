@@ -7,7 +7,8 @@ RUN go mod tidy
 
 COPY . .
 
-RUN go build -o app 
+RUN go get
+RUN go build -o app
 
 # Stage 2
 FROM alpine:3.19

@@ -10,9 +10,18 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"go.uber.org/zap"
 )
 
-// getRoute — основной маршрутный алгоритм
+var sugar *zap.SugaredLogger
+
+// инициализация логгера (вызвать до старта HTTP‑сервера)
+func init() {
+	logger, _ := zap.NewProduction()
+	sugar = logger.Sugar()
+}
+
 func getRoute(data Data) Route {
 	rand.Seed(time.Now().UnixNano())
 
@@ -36,10 +45,8 @@ func getRoute(data Data) Route {
 		if timeLeft <= 0 {
 			break
 		}
-
 		foundNext := false
 
-		// пробуем приоритеты от 5 к 1
 		for idx := 5; idx >= 1; idx-- {
 			typeStr := data.Priority[fmt.Sprintf("%d", idx)]
 			if usedPriorities[typeStr] {
@@ -52,11 +59,11 @@ func getRoute(data Data) Route {
 			}
 
 			last := route.Points[len(route.Points)-1]
-			fmt.Printf("→ пробуем приоритет %d: %s (%s)\n", idx, typeStr, alias)
+			sugar.Infow("Пробуем приоритет", "index", idx, "type", typeStr, "alias", alias)
 
 			name := findLocationByType(alias, last)
 			if name == "" {
-				fmt.Println("⚠️  findLocationByType ничего не вернул, пропускаем категорию")
+				sugar.Warnw("findLocationByType ничего не вернул", "category", alias)
 				continue
 			}
 
@@ -65,7 +72,6 @@ func getRoute(data Data) Route {
 				continue
 			}
 
-			// не идти в уже посещённые (±50 м)
 			skip := false
 			for _, v := range visited {
 				if distanceMeters(v, next) < 50 {
@@ -74,18 +80,18 @@ func getRoute(data Data) Route {
 				}
 			}
 			if skip {
-				fmt.Println("⚠️  Точка уже посещалась, пропускаем:", next)
+				sugar.Infow("Точка уже посещалась — пропускаем", "name", name, "coords", next)
 				continue
 			}
 
 			dist, mins := routeSegmentInfo(last, next, data.Speed)
-			fmt.Printf("⤷ сегмент: %.1f м, %.1f мин\n", dist, mins)
+			sugar.Infow("Сегмент", "distance_m", dist, "duration_min", mins)
+
 			if mins > timeLeft {
-				fmt.Println("⤷ Не влезает во время — пропускаем", alias)
+				sugar.Infow("Не помещается во время", "alias", alias, "remain_min", timeLeft)
 				continue
 			}
 
-			// всё ок — добавляем
 			route.Points = append(route.Points, next)
 			visited = append(visited, next)
 			timeLeft -= mins
@@ -97,59 +103,64 @@ func getRoute(data Data) Route {
 		}
 
 		if !foundNext {
-			fmt.Println("⏹️  Все приоритеты пройдены или не осталось времени — завершаем")
+			sugar.Infow("Приоритеты закончились или нет времени",
+				"remain_min", timeLeft,
+				"points", len(route.Points))
 			break
 		}
 	}
 
-	fmt.Printf("\n⏱️  Итог: %d точек, %.2f км, %.1f мин, остаток %.1f мин\n",
-		len(route.Points),
-		totalDistance/1000,
-		totalTime,
-		timeLeft,
-	)
+	// кольцевой маршрут
+	if data.Loop && len(route.Points) > 1 {
+		start := data.Point
+		last := route.Points[len(route.Points)-1]
+		backDist, backMins := routeSegmentInfo(last, start, data.Speed)
+		sugar.Infow("Дорога назад", "distance_m", backDist, "duration_min", backMins)
 
-	respPreview, _ := json.MarshalIndent(struct {
-		Message  string  `json:"message"`
-		Points   []Point `json:"points"`
-		Distance float64 `json:"distance_km"`
-		Duration float64 `json:"duration_min"`
-	}{
-		Message:  "✅ Маршрут построен успешно",
-		Points:   route.Points,
-		Distance: totalDistance / 1000,
-		Duration: totalTime,
-	}, "", "  ")
-	fmt.Println("Ответ фронту:\n", string(respPreview))
+		if backMins <= timeLeft {
+			route.Points = append(route.Points, start)
+			totalDistance += backDist
+			totalTime += backMins
+			timeLeft -= backMins
+			sugar.Info("Кольцо замкнуто — добавлена стартовая точка")
+		} else {
+			sugar.Warn("Времени на обратный путь не хватило — кольцо не замкнуто")
+		}
+	}
+
+	sugar.Infow("Результат маршрута",
+		"points", len(route.Points),
+		"distance_km", totalDistance/1000,
+		"duration_min", totalTime,
+		"time_left_min", timeLeft,
+	)
 
 	return route
 }
 
-// findLocationByType — поиск ближайшего объекта указанного типа (по России)
+// ---------- ПОИСК ОБЪЕКТОВ ----------
+
 func findLocationByType(priorityType string, start Point) string {
 	base := "https://catalog.api.2gis.com/3.0/items"
-
 	params := url.Values{}
 	params.Set("q", priorityType)
-	params.Set("region_id", "32") // Россия
+	params.Set("region_id", "32")
 	params.Set("location", fmt.Sprintf("%f,%f", start.Y, start.X))
 	params.Set("radius", "10000")
 	params.Set("suggest_type", "object")
 	params.Set("key", "e50d3992-8076-47d8-bc3c-9add5a142f20")
 
 	reqURL := fmt.Sprintf("%s?%s", base, params.Encode())
-	fmt.Println("🌐 findLocationByType:", reqURL)
-
 	resp, err := http.Get(reqURL)
 	if err != nil {
-		fmt.Println("Ошибка findLocationByType:", err)
+		sugar.Errorw("Запрос findLocationByType", "error", err)
 		return ""
 	}
 	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		fmt.Println("HTTP", resp.Status)
+		sugar.Errorw("HTTP", "status", resp.StatusCode, "body", string(body))
 		return ""
 	}
 
@@ -161,7 +172,7 @@ func findLocationByType(priorityType string, start Point) string {
 		} `json:"result"`
 	}
 	if err := json.Unmarshal(body, &parsed); err != nil {
-		fmt.Println("Ошибка парсинга findLocationByType:", err)
+		sugar.Errorw("Парсинг findLocationByType", "error", err)
 		return ""
 	}
 	if len(parsed.Result.Items) > 0 {
@@ -170,12 +181,10 @@ func findLocationByType(priorityType string, start Point) string {
 	return ""
 }
 
-// getPointFromName — получение координат по названию в пределах России
 func getPointFromName(name, city string, start Point) Point {
 	if name == "" {
 		return Point{X: -1, Y: -1}
 	}
-
 	base := "https://catalog.api.2gis.com/3.0/items"
 	params := url.Values{}
 	params.Set("q", fmt.Sprintf("%s %s", city, name))
@@ -186,14 +195,14 @@ func getPointFromName(name, city string, start Point) Point {
 	reqURL := fmt.Sprintf("%s?%s", base, params.Encode())
 	resp, err := http.Get(reqURL)
 	if err != nil {
-		fmt.Println("Ошибка getPointFromName:", err)
+		sugar.Errorw("Запрос getPointFromName", "error", err)
 		return Point{X: -1, Y: -1}
 	}
 	defer resp.Body.Close()
-
 	body, _ := io.ReadAll(resp.Body)
+
 	if resp.StatusCode != http.StatusOK {
-		fmt.Println("HTTP", resp.Status)
+		sugar.Errorw("HTTP getPointFromName", "status", resp.StatusCode, "body", string(body))
 		return Point{X: -1, Y: -1}
 	}
 
@@ -208,7 +217,7 @@ func getPointFromName(name, city string, start Point) Point {
 		} `json:"result"`
 	}
 	if err := json.Unmarshal(body, &parsed); err != nil {
-		fmt.Println("Ошибка парсинга getPointFromName:", err)
+		sugar.Errorw("Парсинг getPointFromName", "error", err)
 		return Point{X: -1, Y: -1}
 	}
 
@@ -230,7 +239,8 @@ func getPointFromName(name, city string, start Point) Point {
 	return Point{X: p.Lat, Y: p.Lon}
 }
 
-// routeSegmentInfo — обращение к Routing API и возврат длины/времени сегмента
+// ---------- РАСЧЁТ СЕГМЕНТОВ ----------
+
 func routeSegmentInfo(start, end Point, speed int) (float64, float64) {
 	urlStr := "https://routing.api.2gis.com/routing/7.0.0/global?key=e50d3992-8076-47d8-bc3c-9add5a142f20"
 	body := map[string]any{
@@ -256,14 +266,14 @@ func routeSegmentInfo(start, end Point, speed int) (float64, float64) {
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Ошибка Routing API:", err)
+		sugar.Errorw("Routing API", "error", err)
 		return 0, 0
 	}
 	defer resp.Body.Close()
 
 	raw, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		fmt.Println("HTTP", resp.Status)
+		sugar.Errorw("Routing API HTTP", "status", resp.StatusCode, "body", string(raw))
 		return 0, 0
 	}
 
@@ -275,7 +285,7 @@ func routeSegmentInfo(start, end Point, speed int) (float64, float64) {
 		} `json:"result"`
 	}
 	if err := json.Unmarshal(raw, &parsed); err != nil {
-		fmt.Println("Ошибка парсинга Routing API:", err)
+		sugar.Errorw("Парсинг Routing API", "error", err)
 		return 0, 0
 	}
 
@@ -291,12 +301,12 @@ func routeSegmentInfo(start, end Point, speed int) (float64, float64) {
 		}
 		return length, duration
 	}
-
-	fmt.Println("⚠️  Routing API пустой ответ")
+	sugar.Warn("Пустой ответ Routing API")
 	return 0, 0
 }
 
-// distanceMeters — быстрый haversine в метрах
+// ---------- МАТЕМАТИКА ----------
+
 func distanceMeters(a, b Point) float64 {
 	const R = 6371000.0
 	lat1 := a.X * math.Pi / 180
@@ -309,7 +319,6 @@ func distanceMeters(a, b Point) float64 {
 	return 2 * R * math.Asin(math.Sqrt(h))
 }
 
-// haversine — просто alias
 func haversine(a, b Point) float64 {
 	return distanceMeters(a, b)
 }
