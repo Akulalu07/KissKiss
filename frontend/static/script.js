@@ -337,6 +337,7 @@ function handleServerResponse(serverResponse) {
 }
 
 // Функция для обработки точек маршрута от сервера
+// Функция для обработки точек маршрута от сервера
 function processRoutePointsFromServer(serverResponse) {
     if (serverResponse.points && Array.isArray(serverResponse.points)) {
         console.log('📍 Получены точки маршрута от сервера:', serverResponse.points);
@@ -347,9 +348,11 @@ function processRoutePointsFromServer(serverResponse) {
             if (point.lat !== undefined && point.lng !== undefined) {
                 return { lat: point.lat, lng: point.lng };
             } else if (point.x !== undefined && point.y !== undefined) {
-                return { lat: point.x, lng: point.y };
+                // x = широта (lat), y = долгота (lng)
+                return { lat: point.x, lng: point.y }; // ← ИСПРАВЛЕНО
             } else if (point[0] !== undefined && point[1] !== undefined) {
-                return { lng: point[0] , lat: point[1]}; // Если массив [lng, lat]
+                // Если массив [lat, lng]
+                return { lat: point[0], lng: point[1] }; // ← ИСПРАВЛЕНО
             }
             return null;
         }).filter(point => point !== null);
@@ -1164,7 +1167,7 @@ function buildRouteOnMap() {
     const baseLat = routeData.coordinates.lat;
     
     // Добавляем начальную точку
-    addMarker([baseLat,baseLng]);
+    addMarker([baseLng, baseLat]);
     
     // Центрируем карту
     map.setCenter([baseLng, baseLat]);
