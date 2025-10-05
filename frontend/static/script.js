@@ -178,7 +178,7 @@ function displayRoutePoints(points) {
     // Создаем маркеры для каждой точки
     points.forEach((point, index) => {
         try {
-            const coordinates = [point.lat, point.lng];
+            const coordinates = [point.lng, point.lat];
             
             // Создаем маркер
             const marker = new mapgl.Marker(map, {
@@ -347,7 +347,7 @@ function processRoutePointsFromServer(serverResponse) {
             if (point.lat !== undefined && point.lng !== undefined) {
                 return { lat: point.lat, lng: point.lng };
             } else if (point.x !== undefined && point.y !== undefined) {
-                return { lat: point.x, lng: point.y }; // Исправлено: x=lat, y=lng
+                return { lat: point.y, lng: point.x };
             } else if (point[0] !== undefined && point[1] !== undefined) {
                 return { lng: point[0] , lat: point[1]}; // Если массив [lng, lat]
             }
