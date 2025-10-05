@@ -985,7 +985,10 @@ function handleServerResponse(serverResponse) {
 
 // Функция для обработки точек маршрута от сервера
 function processRoutePointsFromServer(serverResponse) {
+    
     if (serverResponse.points && Array.isArray(serverResponse.points)) {
+        console.log('📍 Сырые данные от сервера:', serverResponse.points);
+        console.log('📍 Первая точка (сырая):', serverResponse.points[0]);
         console.log('📍 Получены точки маршрута от сервера:', serverResponse.points);
         
         // Преобразуем точки в нужный формат
@@ -1000,7 +1003,8 @@ function processRoutePointsFromServer(serverResponse) {
             }
             return null;
         }).filter(point => point !== null);
-        
+        console.log('📍 Преобразованные точки:', routePoints);
+        console.log('📍 Первая точка (преобразованная):', routePoints[0]);
         if (routePoints.length > 0) {
             // Отображаем точки на карте
             displayRoutePoints(routePoints);
