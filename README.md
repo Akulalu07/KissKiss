@@ -62,4 +62,4 @@
   ```
   docker compose up --build -d
   ```
-  Затем можно получить сайт на http://localhost:8081
+  Затем можно получить сайт на http://localhost:8080
