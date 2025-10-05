@@ -347,7 +347,7 @@ function processRoutePointsFromServer(serverResponse) {
             if (point.lat !== undefined && point.lng !== undefined) {
                 return { lat: point.lat, lng: point.lng };
             } else if (point.x !== undefined && point.y !== undefined) {
-                return { lat: point.y, lng: point.x };
+                return { lat: point.x, lng: point.y };
             } else if (point[0] !== undefined && point[1] !== undefined) {
                 return { lng: point[0] , lat: point[1]}; // Если массив [lng, lat]
             }
@@ -817,8 +817,8 @@ function sendRouteDataToServer() {
     
     const serverData = {
         point: {
-            x: routeData.coordinates.lat,
-            y: routeData.coordinates.lng
+            x: routeData.coordinates.lng,  // x = долгота
+            y: routeData.coordinates.lat   // y = широта
         },
         priority: {
             [routeData.priorities.green.value]: "GREEN_VALLEY",
@@ -991,7 +991,8 @@ function processRoutePointsFromServer(serverResponse) {
             if (point.lat !== undefined && point.lng !== undefined) {
                 return { lat: point.lat, lng: point.lng };
             } else if (point.x !== undefined && point.y !== undefined) {
-                return { lat: point.y, lng: point.x }; // Если сервер использует x,y
+                // ИСПРАВЛЕНО: x = долгота, y = широта
+                return { lat: point.y, lng: point.x };
             } else if (point[0] !== undefined && point[1] !== undefined) {
                 return { lat: point[1], lng: point[0] }; // Если массив [lng, lat]
             }
@@ -1012,7 +1013,6 @@ function processRoutePointsFromServer(serverResponse) {
         buildRouteOnMap();
     }
 }
-
 // Функция для отображения сводки с ответом сервера
 // Функция для отображения сводки с ответом сервера
 function showServerResponseSummary(serverResponse) {
