@@ -71,6 +71,7 @@
                             <option value="custom">Другой город</option>
                         </select>
                     </div>
+                    
                     <div class="city-coordinates">
                         <div class="coordinates-info">
                             <strong>Координаты центра:</strong>
@@ -79,6 +80,27 @@
                     </div>
                     <div class="city-description">
                         <small> Координаты автоматически обновятся при выборе города</small>
+                    </div>
+                </div>
+            </div>
+            <div class="feature-card">
+                <h3>Настройки маршрута</h3>
+                <p>Быстрые настройки для разных типов прогулок:</p>
+                <div class="quick-presets">
+                    <div class="preset-buttons">
+                        <button id="tourist-preset" class="btn btn-preset">
+                            <span class="preset-icon"></span>
+                            Для туриста
+                            <!-- <span class="preset-desc">Памятники → Набережная → Еда</span>
+                        </button> -->
+                        <button id="local-preset" class="btn btn-preset">
+                            <span class="preset-icon"></span>
+                            Для местного
+                            <!-- <span class="preset-desc">Парки → Набережная → Еда</span> -->
+                        </button>
+                    </div>
+                    <div class="preset-description">
+                        <small>Нажмите кнопку для автоматической настройки приоритетов</small>
                     </div>
                 </div>
             </div>
@@ -142,7 +164,7 @@
                             </div>
                         </div>
                         <div class="priority-help">
-                            <small>💡 1 - не важно, 5 - очень важно</small>
+                            <small> 1 - не важно, 5 - очень важно</small>
                         </div>
                     </div>
 
@@ -187,7 +209,7 @@
                             </div>
                         </div>
                         <div class="speed-description">
-                            <small>🐌 0 - очень медленно | 5 - очень быстро 🏃‍♂️</small>
+                            <small> 0 - очень медленно | 5 - очень быстро </small>
                         </div>
                         <div class="speed-levels">
                             <div class="speed-level">
@@ -206,24 +228,22 @@
                     </div>
                 </div>
                 <!-- Добавьте этот блок после карточки скорости маршрута -->
+
                 <div class="feature-card">
                     <h3>Зацикленный маршрут</h3>
                     <p>Вернуться к начальной точке?</p>
                     <div class="loop-controls">
-                        <div class="loop-options">
-                            <label class="loop-option">
-                                <input type="radio" name="loop-route" value="yes" checked>
-                                <span class="radio-custom"></span>
-                                <span class="loop-label">✅ Да (вернуться к началу)</span>
-                            </label>
-                            <label class="loop-option">
-                                <input type="radio" name="loop-route" value="no">
-                                <span class="radio-custom"></span>
-                                <span class="loop-label">❌ Нет (линейный маршрут)</span>
-                            </label>
+                        <div class="toggle-switch-wrapper">
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="loop-toggle" class="toggle-input">
+                                <label for="loop-toggle" class="toggle-label">
+                                    <span class="toggle-handle"></span>
+                                </label>
+                            </div>
+                            <span class="toggle-state-text">Нет (линейный маршрут)</span>
                         </div>
                         <div class="loop-description">
-                            <small>🔄 Зацикленный маршрут вернет вас к начальной точке, линейный - закончится в другой точке</small>
+                            <small>Зацикленный маршрут вернет вас к начальной точке, линейный - закончится в другой точке</small>
                         </div>
                     </div>
                 </div>
